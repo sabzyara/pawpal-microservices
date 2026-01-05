@@ -1,5 +1,7 @@
 package com.example.pawpalapp.userservice.model;
 
+import com.example.pawpalapp.userservice.model.enums.Role;
+import com.example.pawpalapp.userservice.model.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,7 +33,11 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    @Enumerated(EnumType.STRING)
+    private UserStatus status;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
