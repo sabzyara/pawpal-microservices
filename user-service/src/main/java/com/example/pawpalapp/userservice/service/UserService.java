@@ -7,6 +7,7 @@ import com.example.pawpalapp.userservice.mapper.UserMapper;
 import com.example.pawpalapp.userservice.model.User;
 import com.example.pawpalapp.userservice.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // CREATE USER
     public UserResponseDto createUser(UserCreateDto userDto) {
@@ -25,6 +27,7 @@ public class UserService {
             throw new RuntimeException("This user already exists");
         }
         User user = UserMapper.toEntity(userDto);
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         User saved = userRepository.save(user);
         return UserMapper.toDto(saved);
     }
