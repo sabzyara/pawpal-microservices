@@ -2,7 +2,6 @@ package com.example.pawpalapp.userservice.controller;
 
 import com.example.pawpalapp.userservice.dto.UserCreateDto;
 import com.example.pawpalapp.userservice.dto.UserResponseDto;
-import com.example.pawpalapp.userservice.dto.UserUpdateDto;
 import com.example.pawpalapp.userservice.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,12 +37,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    // Update
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id,
-                                    @RequestBody UserUpdateDto userDto) {
-        return ResponseEntity.ok(userService.updateUser(id, userDto));
-    }
 
     // Delete
     @DeleteMapping("/{id}")

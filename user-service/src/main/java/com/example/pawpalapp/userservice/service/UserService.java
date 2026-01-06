@@ -1,9 +1,7 @@
 package com.example.pawpalapp.userservice.service;
 
 import com.example.pawpalapp.userservice.dto.UserCreateDto;
-import com.example.pawpalapp.userservice.dto.UserRegisterDto;
 import com.example.pawpalapp.userservice.dto.UserResponseDto;
-import com.example.pawpalapp.userservice.dto.UserUpdateDto;
 import com.example.pawpalapp.userservice.mapper.UserMapper;
 import com.example.pawpalapp.userservice.model.User;
 import com.example.pawpalapp.userservice.model.enums.Role;
@@ -72,6 +70,14 @@ public class UserService {
         }
         User user = UserMapper.toEntity(userDto);
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setRole(userDto.getRole());
+
+        if (userDto.getRole() == Role.OWNER || userDto.getRole() == Role.ADMIN) {
+            user.setStatus(UserStatus.ACTIVE);
+        } else {
+            user.setStatus(UserStatus.PENDING);
+        }
+
         User saved = userRepository.save(user);
         return UserMapper.toDto(saved);
     }
@@ -82,16 +88,6 @@ public class UserService {
                 .stream()
                 .map(UserMapper::toDto)
                 .toList();
-    }
-
-    // UPDATE USER
-    @Transactional
-    public UserResponseDto updateUser(Long id, UserUpdateDto userDto) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found!"));
-        UserMapper.updateEntity(user, userDto);
-
-        return UserMapper.toDto(user);
     }
 
     // DELETE USER
@@ -108,5 +104,12 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return UserMapper.toDto(user);
     }
+
+    // STATUS UPDATE
+    public void updateStatus(Long userId, UserStatus status) {
+        User user = userRepository.findById(userId).orElseThrow();
+        user.setStatus(status);
+    }
+
 
 }
