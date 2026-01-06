@@ -6,4 +6,4 @@ include 'user-service'
 include 'specialist-service'
 include 'map-service'
 include 'notification-service'
-include 'ai-analytics-service'
+
