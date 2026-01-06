@@ -14,5 +14,7 @@ public class SpecialistCreateDto {
 
     private Long userId;
     private SpecialistType type;
+
 }
+
 
