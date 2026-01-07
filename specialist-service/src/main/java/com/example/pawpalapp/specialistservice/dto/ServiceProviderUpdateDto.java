@@ -1,6 +1,5 @@
 package com.example.pawpalapp.specialistservice.dto;
 
-import com.example.pawpalapp.specialistservice.model.SpecialistType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,11 +9,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SpecialistCreateDto {
-
-    private Long userId;
-    private SpecialistType type;
-
+public class ServiceProviderUpdateDto {
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+    private String serviceCategory;
 }
-
 
