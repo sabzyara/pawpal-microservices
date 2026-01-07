@@ -1,6 +1,9 @@
 package com.example.pawpalapp.specialistservice.service;
 
 
+import com.example.pawpalapp.security.AuthUser;
+import com.example.pawpalapp.security.Role;
+import com.example.pawpalapp.security.SecurityUtils;
 import com.example.pawpalapp.specialistservice.dto.VetCreateDto;
 import com.example.pawpalapp.specialistservice.dto.VetResponseDto;
 import com.example.pawpalapp.specialistservice.dto.VetUpdateDto;
@@ -8,6 +11,7 @@ import com.example.pawpalapp.specialistservice.mapper.VetMapper;
 import com.example.pawpalapp.specialistservice.model.Veterinarian;
 import com.example.pawpalapp.specialistservice.repository.VeterinarianRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -45,17 +49,41 @@ public class VeterinarianService {
         return VetMapper.toDto(v);
     }
 
-    public VetResponseDto updateByUserId(Long userId, VetUpdateDto dto) {
+//    public VetResponseDto updateByUserId(Long userId, VetUpdateDto dto) {
+//
+//
+//        Veterinarian vet = veterinarianRepository.findByUserId(userId)
+//                .orElseThrow(() -> new RuntimeException("Veterinarian profile not found"));
+//
+//        VetMapper.updateEntity(vet, dto);
+//
+//        Veterinarian saved = veterinarianRepository.save(vet);
+//
+//        return VetMapper.toDto(saved);
+//    }
 
-        Veterinarian vet = veterinarianRepository.findByUserId(userId)
+    public VetResponseDto update(VetUpdateDto dto) {
+
+        AuthUser current = SecurityUtils.current();
+
+        // RBAC
+        if (current.role() != Role.VET && current.role() != Role.ADMIN) {
+            throw new AccessDeniedException("Only vets can update vet profile");
+        }
+
+        Long targetUserId = current.userId();
+
+        Veterinarian veterinarian = veterinarianRepository
+                .findByUserId(targetUserId)
                 .orElseThrow(() -> new RuntimeException("Veterinarian profile not found"));
 
-        VetMapper.updateEntity(vet, dto);
+        VetMapper.updateEntity(veterinarian, dto);
 
-        Veterinarian saved = veterinarianRepository.save(vet);
+        Veterinarian saved = veterinarianRepository.save(veterinarian);
 
         return VetMapper.toDto(saved);
     }
+
 
 
 
