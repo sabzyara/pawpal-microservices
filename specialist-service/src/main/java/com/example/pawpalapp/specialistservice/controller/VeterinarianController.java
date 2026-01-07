@@ -18,8 +18,7 @@ public class VeterinarianController {
     private final VeterinarianService veterinarianService;
 
     @PostMapping
-    public ResponseEntity<VetResponseDto> create(@RequestBody VetCreateDto dto,
-                                                 ) {
+    public ResponseEntity<VetResponseDto> create(@RequestBody VetCreateDto dto) {
         return ResponseEntity.ok(veterinarianService.create(dto));
     }
 
@@ -28,12 +27,10 @@ public class VeterinarianController {
         return ResponseEntity.ok(veterinarianService.getAll());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<VetResponseDto> update(
-            @PathVariable Long id,
-            @RequestBody VetUpdateDto dto) {
+    @PutMapping("/me")
+    public ResponseEntity<VetResponseDto> update(@RequestBody VetUpdateDto dto) {
 
-        return ResponseEntity.ok(veterinarianService.updateByUserId(id, dto));
+        return ResponseEntity.ok(veterinarianService.update(dto));
     }
 
 
