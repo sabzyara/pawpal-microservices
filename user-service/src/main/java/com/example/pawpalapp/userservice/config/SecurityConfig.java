@@ -14,8 +14,15 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 . authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/veterinarians").hasAnyRole("VET", "ADMIN")
+                        .requestMatchers("/api/service-providers").hasAnyRole("SERVICE", "ADMIN")
+                        .requestMatchers("/api/pets",
+                                "/api/nutrition",
+                                "/api/activities",
+                                "/api/activities/pet/",
+                                "/api/nutrition/pet/").hasAnyRole("OWNER", "ADMIN")
                         .requestMatchers("/users").permitAll()
-                        .requestMatchers("/users/**").authenticated()
+                        .requestMatchers("/users/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults());
 
