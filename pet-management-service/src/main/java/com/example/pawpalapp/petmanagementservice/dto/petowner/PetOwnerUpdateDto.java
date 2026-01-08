@@ -7,8 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PetOwnerCreateDto {
-    private Long userId;
+public class PetOwnerUpdateDto {
     private String username;
     private String phoneNumber;
     private String address;

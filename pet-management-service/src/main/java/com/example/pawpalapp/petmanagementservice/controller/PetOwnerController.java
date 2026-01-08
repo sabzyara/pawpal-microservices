@@ -8,14 +8,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/pet-owners")
 public class PetOwnerController {
 
-    private final PetOwnerService service;
+    private final PetOwnerService petOwnerService;
 
     public PetOwnerController(PetOwnerService service) {
-        this.service = service;
+        this.petOwnerService = service;
     }
 
-    @PostMapping
-    public PetOwnerResponseDto create(@RequestBody PetOwnerCreateDto dto) {
-        return service.create(dto);
+    @PostMapping("/me")
+    public void create(@RequestBody PetOwnerCreateDto dto) {
+        petOwnerService.createMyProfile(dto);
+    }
+
+    @PutMapping("/me")
+    public PetOwnerResponseDto update(@RequestBody PetOwnerUpdateDto dto) {
+        return petOwnerService.update(dto);
     }
 }
