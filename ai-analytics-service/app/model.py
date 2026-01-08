@@ -1,12 +1,24 @@
-from sklearn.linear_model import LogisticRegression
-import numpy as np
+class RecommendationModel:
 
-class HealthModel:
-    def __init__(self):
-        self.model = LogisticRegression()
-        X = np.array([[1,2], [5,1], [10,0], [2,5]])
-        y = np.array([0, 1, 1, 0])
-        self.model.fit(X, y)
+    def analyze(self, data: dict) -> list[str]:
+        recs = []
 
-    def predict(self, age, activity):
-        return self.model.predict([[age, activity]])[0]
+        species = data.get("species")
+        weight = int(data.get("weight", 0))
+        age = int(data.get("age", 0))
+        activity = int(data.get("totalActivityMinutes", 0))
+        calories = int(data.get("totalCalories", 0))
+
+        if activity < 30:
+            recs.append("Increase daily activity level")
+
+        if weight > 0 and calories > weight * 70:
+            recs.append("Daily calorie intake may be too high")
+
+        if species == "cat" and activity < 20:
+            recs.append("Increase play sessions for mental stimulation")
+
+        if not recs:
+            recs.append("Current routine looks balanced")
+
+        return recs

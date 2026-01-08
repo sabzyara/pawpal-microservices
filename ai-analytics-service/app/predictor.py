@@ -1,7 +1,8 @@
-from app.model import  HealthModel
+# app/predictor.py
 
-model = HealthModel()
+from app.model import RecommendationModel
 
-def predict_health(age, activity):
-    result = model.predict(age, activity)
-    return "HIGH_RISK" if result == 1 else "LOW_RISK"
+model = RecommendationModel()
+
+def generate_recommendations(data: dict) -> list[str]:
+    return model.analyze(data)
