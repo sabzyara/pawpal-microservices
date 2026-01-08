@@ -1,4 +1,4 @@
-package com.example.pawpalapp.specialistservice.security;
+package com.example.pawpalapp.appointmentservice.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,4 +26,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-

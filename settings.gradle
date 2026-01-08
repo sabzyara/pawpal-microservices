@@ -7,4 +7,5 @@ include 'specialist-service'
 include 'map-service'
 include 'notification-service'
 include 'common-security'
+include 'appointment-service'
 
