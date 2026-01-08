@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PetOwnerMapper {
 
-    public PetOwner toEntity(PetOwnerCreateDto dto) {
+    public static PetOwner toEntity(PetOwnerCreateDto dto) {
         return PetOwner.builder()
                 .userId(dto.getUserId())
                 .phoneNumber(dto.getPhoneNumber())
@@ -15,12 +15,26 @@ public class PetOwnerMapper {
                 .build();
     }
 
-    public PetOwnerResponseDto toDto(PetOwner owner) {
+    public static PetOwnerResponseDto toDto(PetOwner owner) {
         return PetOwnerResponseDto.builder()
                 .id(owner.getId())
                 .userId(owner.getUserId())
                 .phoneNumber(owner.getPhoneNumber())
                 .address(owner.getAddress())
                 .build();
+    }
+
+
+    public static void updateEntity(PetOwner petOwner, PetOwnerUpdateDto dto) {
+
+        if (dto.getUsername() != null)
+            petOwner.setUsername(dto.getUsername());
+
+        if (dto.getAddress() != null)
+            petOwner.setAddress(dto.getAddress());
+
+        if (dto.getPhoneNumber() != null)
+            petOwner.setPhoneNumber(dto.getPhoneNumber());
+
     }
 }

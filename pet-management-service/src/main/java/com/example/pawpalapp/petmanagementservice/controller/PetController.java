@@ -21,8 +21,8 @@ public class PetController {
         return petService.create(dto);
     }
 
-    @GetMapping("/owner/{ownerId}")
-    public List<PetResponseDto> getByOwner(@PathVariable Long ownerId) {
-        return petService.getByOwner(ownerId);
+    @GetMapping
+    public List<PetResponseDto> getByOwner() {
+        return petService.getByOwner();
     }
 }

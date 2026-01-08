@@ -8,10 +8,13 @@ import com.example.pawpalapp.specialistservice.dto.VetCreateDto;
 import com.example.pawpalapp.specialistservice.dto.VetResponseDto;
 import com.example.pawpalapp.specialistservice.dto.VetUpdateDto;
 import com.example.pawpalapp.specialistservice.mapper.VetMapper;
+import com.example.pawpalapp.specialistservice.model.ServiceProvider;
 import com.example.pawpalapp.specialistservice.model.Veterinarian;
 import com.example.pawpalapp.specialistservice.repository.VeterinarianRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,18 +25,32 @@ public class VeterinarianService {
 
     private final VeterinarianRepository veterinarianRepository;
 
-    public VetResponseDto create(VetCreateDto dto) {
+    public void createMyProfile(VetCreateDto request) {
 
-        if (veterinarianRepository.existsByUserId(dto.getUserId())) {
-            throw new RuntimeException("Veterinarian profile already exists");
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Long userId = jwt.getClaim("userId");
+        String role = jwt.getClaim("role");
+
+        if (!"VET".equals(role)) {
+            throw new AccessDeniedException("Only VET can create profile");
         }
 
-        Veterinarian vet = VetMapper.toEntity(dto);
+        if (veterinarianRepository.existsByUserId(userId)) {
+            throw new RuntimeException("Profile already exists");
+        }
 
-        Veterinarian saved = veterinarianRepository.save(vet);
-
-        return VetMapper.toDto(saved);
-
+        Veterinarian vet = new Veterinarian();
+        vet.setUserId(userId);
+        vet.setFirstName(request.getFirstName());
+        vet.setLastName(request.getLastName());
+        vet.setPhoneNumber(request.getPhoneNumber());
+        vet.setLicenseNumber(request.getLicenseNumber());
+        vet.setExperienceYears(request.getExperienceYears());
+        vet.setClinicName(request.getClinicName());
+        veterinarianRepository.save(vet);
     }
 
     public List<VetResponseDto> getAll() {
@@ -67,7 +84,7 @@ public class VeterinarianService {
         AuthUser current = SecurityUtils.current();
 
         // RBAC
-        if (current.role() != Role.VET && current.role() != Role.ADMIN) {
+        if (current.role() != Role.VET) {
             throw new AccessDeniedException("Only vets can update vet profile");
         }
 

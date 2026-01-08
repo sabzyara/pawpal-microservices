@@ -31,10 +31,11 @@ public class PetOwner {
     @Column(nullable = false, unique = true)
     private Long userId;
 
+    private String username;
+
     private String phoneNumber;
 
     private String address;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+
 }
