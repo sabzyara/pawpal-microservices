@@ -57,29 +57,10 @@ public class ServiceProviderService {
                 .toList();
     }
 
-    public ServiceProviderResponseDto getById(Long id) {
-        ServiceProvider sp = serviceProviderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No service provider found"));
-        return ServiceProviderMapper.toDto(sp);
-    }
-
-    public ServiceProviderResponseDto updateByUserId(Long userId, ServiceProviderUpdateDto dto) {
-
-        ServiceProvider sp = serviceProviderRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Service provider not found"));
-
-        ServiceProviderMapper.updateEntity(sp, dto);
-
-        ServiceProvider saved = serviceProviderRepository.save(sp);
-
-        return ServiceProviderMapper.toDto(saved);
-    }
-
     public ServiceProviderResponseDto update(ServiceProviderUpdateDto dto) {
 
         AuthUser current = SecurityUtils.current();
 
-        // RBAC
         if (current.role() != Role.SERVICE) {
             throw new AccessDeniedException("Only service provider can update vet profile");
         }

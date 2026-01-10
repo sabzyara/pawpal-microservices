@@ -28,8 +28,8 @@ import java.time.LocalTime;
 public class Appointment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="appointment_seq_gen")
+    @SequenceGenerator(allocationSize=1, schema="public",  name="appointment_seq_gen", sequenceName = "appointmentSequence")    private Long id;
 
     private Long userId;
 

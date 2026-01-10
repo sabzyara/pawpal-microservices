@@ -6,6 +6,8 @@ import com.example.pawpalapp.appointmentservice.model.enums.SpecialistType;
 import com.example.pawpalapp.appointmentservice.repository.SpecialistScheduleRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,30 +18,35 @@ public class SpecialistScheduleService {
 
     private final SpecialistScheduleRepository specialistScheduleRepository;
 
+    // CREATE OR UPDATE SCHEDULE
     @Transactional
     public SpecialistSchedule createOrUpdate(
-            Long specialistId,
-            SpecialistType specialistType,
             SpecialistScheduleCreateDto request
     ) {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
+                        .getAuthentication()
+                                .getPrincipal();
 
+        Long specialistId = jwt.getClaim("userId");
+        String specialistType = jwt.getClaim("role");
         validate(request);
 
         return specialistScheduleRepository
                 .findByUserIdAndSpecialistTypeAndDayOfWeek(
                         specialistId,
-                        specialistType,
+                        SpecialistType.valueOf(specialistType),
                         request.getDayOfWeek()
                 )
                 .map(existing -> update(existing, request))
                 .orElseGet(() -> create(
                         specialistId,
-                        specialistType,
+                        SpecialistType.valueOf(specialistType),
                         request
                 ));
     }
 
 
+    // CREATE
     private SpecialistSchedule create(
             Long specialistId,
             SpecialistType specialistType,
@@ -59,7 +66,7 @@ public class SpecialistScheduleService {
         return specialistScheduleRepository.save(schedule);
     }
 
-
+    // UPDATE
     private SpecialistSchedule update(
             SpecialistSchedule existing,
             SpecialistScheduleCreateDto request
@@ -73,17 +80,20 @@ public class SpecialistScheduleService {
         return specialistScheduleRepository.save(existing);
     }
 
-    public List<SpecialistSchedule> getAll(
-            Long specialistId,
-            SpecialistType specialistType
-    ) {
+    public List<SpecialistSchedule> getAll() {
+
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+        Long specialistId = jwt.getClaim("userId");
+        String specialistType = jwt.getClaim("role");
         return specialistScheduleRepository.findByUserIdAndSpecialistType(
                 specialistId,
-                specialistType
+                SpecialistType.valueOf(specialistType)
         );
     }
 
-
+    // CHECKING AND VALIDATING OF TIME
     private void validate(SpecialistScheduleCreateDto r) {
 
         if (r.getWorkStart().isAfter(r.getWorkEnd())

@@ -21,7 +21,8 @@ import java.time.LocalTime;
 public class SpecialistSchedule {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="schedule_seq_gen")
+    @SequenceGenerator(allocationSize=1, schema="public",  name="schedule_seq_gen", sequenceName = "scheduleSequence")
     private Long id;
 
     private Long userId;

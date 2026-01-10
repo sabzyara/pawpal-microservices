@@ -8,6 +8,8 @@ import com.example.pawpalapp.appointmentservice.repository.SpecialistScheduleRep
 import com.example.pawpalapp.appointmentservice.repository.TimeSlotRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -24,19 +26,22 @@ public class SlotGenerationService {
     private final TimeSlotRepository timeSlotRepository;
 
     @Transactional
-    public List<TimeSlot> generateSlotsForDate(
-            Long specialistId,
-            SpecialistType specialistType,
-            LocalDate date
-    ) {
+    public List<TimeSlot> generateSlotsForDate(LocalDate date) {
+
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Long specialistId = jwt.getClaim("userId");
+        String specialistType = jwt.getClaim("role");
 
         // CHECKING IF SLOTS ARE ALREADY GENERATED
         if (timeSlotRepository.existsByUserIdAndSpecialistTypeAndDate(
-                specialistId, specialistType, date)) {
+                specialistId, SpecialistType.valueOf(specialistType), date)) {
 
             return timeSlotRepository
                     .findByUserIdAndSpecialistTypeAndDate(
-                            specialistId, specialistType, date);
+                            specialistId, SpecialistType.valueOf(specialistType), date);
         }
 
         // GET SCHEDULE OF THIS DAY OF WEEK
@@ -44,7 +49,7 @@ public class SlotGenerationService {
 
         SpecialistSchedule schedule = scheduleRepository
                 .findByUserIdAndSpecialistTypeAndDayOfWeek(
-                        specialistId, specialistType, dayOfWeek)
+                        specialistId, SpecialistType.valueOf(specialistType), dayOfWeek)
                 .orElseThrow(() ->
                         new IllegalStateException("Schedule not found for this day"));
 
@@ -70,7 +75,7 @@ public class SlotGenerationService {
             if (!isBreak) {
                 slots.add(TimeSlot.builder()
                         .userId(specialistId)
-                        .specialistType(specialistType)
+                        .specialistType(SpecialistType.valueOf(specialistType))
                         .date(date)
                         .startTime(current)
                         .endTime(end)
