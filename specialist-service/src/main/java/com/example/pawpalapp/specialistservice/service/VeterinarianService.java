@@ -66,19 +66,6 @@ public class VeterinarianService {
         return VetMapper.toDto(v);
     }
 
-//    public VetResponseDto updateByUserId(Long userId, VetUpdateDto dto) {
-//
-//
-//        Veterinarian vet = veterinarianRepository.findByUserId(userId)
-//                .orElseThrow(() -> new RuntimeException("Veterinarian profile not found"));
-//
-//        VetMapper.updateEntity(vet, dto);
-//
-//        Veterinarian saved = veterinarianRepository.save(vet);
-//
-//        return VetMapper.toDto(saved);
-//    }
-
     public VetResponseDto update(VetUpdateDto dto) {
 
         AuthUser current = SecurityUtils.current();
@@ -100,8 +87,6 @@ public class VeterinarianService {
 
         return VetMapper.toDto(saved);
     }
-
-
 
 
     public void delete(Long id) {

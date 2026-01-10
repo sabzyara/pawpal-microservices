@@ -17,24 +17,13 @@ public class SpecialistScheduleController {
     private final SpecialistScheduleService service;
 
     @PostMapping
-    public SpecialistSchedule createOrUpdate(
-            @RequestParam Long specialistId,
-            @RequestParam SpecialistType specialistType,
-            @RequestBody SpecialistScheduleCreateDto request
-    ) {
-        return service.createOrUpdate(
-                specialistId,
-                specialistType,
-                request
-        );
+    public SpecialistSchedule createOrUpdate(@RequestBody SpecialistScheduleCreateDto request) {
+        return service.createOrUpdate(request);
     }
 
     @GetMapping
-    public List<SpecialistSchedule> getAll(
-            @RequestParam Long specialistId,
-            @RequestParam SpecialistType specialistType
-    ) {
-        return service.getAll(specialistId, specialistType);
+    public List<SpecialistSchedule> getAll() {
+        return service.getAll();
     }
 }
 

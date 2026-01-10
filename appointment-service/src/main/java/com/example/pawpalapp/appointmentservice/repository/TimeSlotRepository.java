@@ -5,7 +5,9 @@ import com.example.pawpalapp.appointmentservice.model.enums.SpecialistType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
 
@@ -20,5 +22,13 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
             SpecialistType specialistType,
             LocalDate date
     );
+
+    Optional<TimeSlot> findByUserIdAndSpecialistTypeAndDateAndStartTime(
+            Long userId,
+            SpecialistType specialistType,
+            LocalDate date,
+            LocalTime startTime
+    );
+
 
 }

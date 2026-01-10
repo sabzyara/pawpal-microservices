@@ -4,6 +4,7 @@ import com.example.pawpalapp.appointmentservice.model.TimeSlot;
 import com.example.pawpalapp.appointmentservice.model.enums.SpecialistType;
 import com.example.pawpalapp.appointmentservice.service.SlotGenerationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,12 +22,11 @@ public class TimeSlotController {
 
     @PostMapping("/generate")
     public List<TimeSlot> generate(
-            @RequestParam Long userId,
-            @RequestParam SpecialistType specialistType,
-            @RequestParam LocalDate date
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date
     ) {
-        return slotGenerationService.generateSlotsForDate(
-                userId, specialistType, date);
+        return slotGenerationService.generateSlotsForDate(date);
     }
 }
 
