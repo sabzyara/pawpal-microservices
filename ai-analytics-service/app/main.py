@@ -13,9 +13,11 @@ class RecommendationRequest(BaseModel):
     totalCalories: int
 
 class RecommendationResponse(BaseModel):
+    healthScore: int
+    riskLevel: str
     recommendations: List[str]
 
 @app.post("/ai/recommend", response_model=RecommendationResponse)
 def recommend(request: RecommendationRequest):
-    recs = generate_recommendations(request.dict())
-    return RecommendationResponse(recommendations=recs)
+    return generate_recommendations(request.dict())
+t

@@ -1,7 +1,6 @@
 package com.example.pawpalapp.petmanagementservice.dto.ai;
 
 import lombok.*;
-
 import java.util.List;
 
 @Getter
@@ -11,5 +10,7 @@ import java.util.List;
 @Builder
 public class RecommendationResponseDto {
 
+    private int healthScore;
+    private String riskLevel;
     private List<String> recommendations;
 }

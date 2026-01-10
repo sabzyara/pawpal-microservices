@@ -30,7 +30,6 @@ public class NutritionLog {
     @CollectionTable(name = "nutrition_food_items")
     private List<String> foodItems;
 
-    /* === domain methods === */
 
     public void addMeal() {}
 
@@ -46,5 +45,5 @@ public class NutritionLog {
         return mealType + " with " + calories + " kcal";
     }
 
-    // getters & setters
+
 }

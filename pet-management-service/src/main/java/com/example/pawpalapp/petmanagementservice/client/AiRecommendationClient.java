@@ -14,11 +14,11 @@ public class AiRecommendationClient {
     private String aiServiceUrl;
 
     public RecommendationResponseDto getRecommendations(
-            RecommendationRequestDto dto
+            RecommendationRequestDto request
     ) {
         return restTemplate.postForObject(
                 aiServiceUrl + "/ai/recommend",
-                dto,
+                request,
                 RecommendationResponseDto.class
         );
     }

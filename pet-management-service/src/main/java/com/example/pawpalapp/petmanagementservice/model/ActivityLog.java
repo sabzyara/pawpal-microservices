@@ -27,14 +27,14 @@ public class ActivityLog {
 
     private int durationInMinutes;
 
-    /* === domain methods === */
+
 
     public void addActivity() {
-        // domain logic if needed
+
     }
 
     public void editActivity() {
-        // domain logic if needed
+
     }
 
     public int calculateActivityStats() {
@@ -45,5 +45,4 @@ public class ActivityLog {
         return activityType + " for " + durationInMinutes + " minutes";
     }
 
-    // getters & setters
 }
