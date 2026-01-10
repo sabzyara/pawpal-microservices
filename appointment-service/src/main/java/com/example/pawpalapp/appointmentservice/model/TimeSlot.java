@@ -27,7 +27,8 @@ import java.time.LocalTime;
 public class TimeSlot {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="time_slot_seq_gen")
+    @SequenceGenerator(allocationSize=1, schema="public",  name="time_slot_seq_gen", sequenceName = "timeSlotSequence")
     private Long id;
 
     private Long userId;
