@@ -20,4 +20,4 @@ class RecommendationResponse(BaseModel):
 @app.post("/ai/recommend", response_model=RecommendationResponse)
 def recommend(request: RecommendationRequest):
     return generate_recommendations(request.dict())
-t
+
