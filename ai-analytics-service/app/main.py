@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.schemas import RecommendationRequest, RecommendationResponse, ChatRequest
 from app.predictor import generate_recommendations
-from app.huggingface_client import ask_ai
+from app.ai_client import ask_ai
 
 app = FastAPI(title="PawPal AI Analytics Service")
 
@@ -12,4 +12,4 @@ def recommend(request: RecommendationRequest):
 
 @app.post("/ai/chat")
 def chat(req: ChatRequest):
-    return ask_ai(req.message)
+    return ask_ai(req.message, req.userId, req.token)
