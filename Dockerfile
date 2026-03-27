@@ -5,7 +5,7 @@ FROM eclipse-temurin:17-jdk
 WORKDIR /app
 COPY . .
 
-# Собираем проект
+
 RUN chmod +x gradlew
 RUN ./gradlew build -x test
 
