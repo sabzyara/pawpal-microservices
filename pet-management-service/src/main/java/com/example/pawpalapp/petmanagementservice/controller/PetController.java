@@ -25,4 +25,13 @@ public class PetController {
     public List<PetResponseDto> getByOwner() {
         return petService.getByOwner();
     }
+
+    @GetMapping("/{userId}")
+    public List<PetResponseDto> getByUser(@PathVariable Long userId) {
+        return petService.getByUser(userId);
+    }
+    @GetMapping("/pet/{petId}/full")
+    public PetFullDto getByPet(@PathVariable Long petId) {
+        return petService.getByPetId(petId);
+    }
 }

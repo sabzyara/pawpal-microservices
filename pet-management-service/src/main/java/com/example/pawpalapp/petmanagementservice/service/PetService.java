@@ -2,8 +2,12 @@ package com.example.pawpalapp.petmanagementservice.service;
 
 import com.example.pawpalapp.petmanagementservice.dto.pet.*;
 import com.example.pawpalapp.petmanagementservice.mapper.PetMapper;
+import com.example.pawpalapp.petmanagementservice.model.ActivityLog;
+import com.example.pawpalapp.petmanagementservice.model.NutritionLog;
 import com.example.pawpalapp.petmanagementservice.model.Pet;
 import com.example.pawpalapp.petmanagementservice.model.PetOwner;
+import com.example.pawpalapp.petmanagementservice.repository.ActivityLogRepository;
+import com.example.pawpalapp.petmanagementservice.repository.NutritionLogRepository;
 import com.example.pawpalapp.petmanagementservice.repository.PetOwnerRepository;
 import com.example.pawpalapp.petmanagementservice.repository.PetRepository;
 import com.example.pawpalapp.security.AuthUser;
@@ -21,11 +25,15 @@ public class PetService {
     private final PetRepository petRepository;
     private final PetMapper petMapper;
     private final PetOwnerRepository petOwnerRepository;
+    private final ActivityLogRepository activityLogRepository;
+    private final NutritionLogRepository nutritionLogRepository;
 
-    public PetService(PetRepository petRepository, PetMapper petMapper, PetOwnerRepository petOwnerRepository) {
+    public PetService(PetRepository petRepository, PetMapper petMapper, PetOwnerRepository petOwnerRepository, ActivityLogRepository activityLogRepository, NutritionLogRepository nutritionLogRepository) {
         this.petRepository = petRepository;
         this.petMapper = petMapper;
         this.petOwnerRepository = petOwnerRepository;
+        this.activityLogRepository = activityLogRepository;
+        this.nutritionLogRepository = nutritionLogRepository;
     }
 
     public PetResponseDto create(PetCreateDto dto) {
@@ -80,5 +88,64 @@ public class PetService {
                 .stream()
                 .map(petMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    public List<PetResponseDto> getByUser(Long userId) {
+
+        PetOwner owner = petOwnerRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new IllegalStateException("PetOwner not found")
+                );
+
+        Long ownerId = owner.getId();
+
+        return petRepository.findByOwnerId(ownerId)
+                .stream()
+                .map(petMapper::toDto)
+                .toList();
+    }
+    public PetFullDto getFullData(String userId) {
+
+        Long userIdLong = Long.valueOf(userId);
+
+        PetOwner owner = petOwnerRepository.findByUserId(userIdLong)
+                .orElseThrow();
+
+        Long ownerId = owner.getId();
+
+        Pet pet = petRepository.findFirstByOwnerId(ownerId)
+                .orElseThrow();
+
+        List<ActivityLog> activities =
+                activityLogRepository.findByPetId(pet.getId());
+
+        List<NutritionLog> nutrition =
+                nutritionLogRepository.findByPetId(pet.getId());
+
+        PetFullDto dto = new PetFullDto();
+        dto.setPet(petMapper.toDto(pet));
+        dto.setActivities(activities);
+        dto.setNutrition(nutrition);
+
+        return dto;
+    }
+
+    public PetFullDto getByPetId(Long petId) {
+
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow();
+
+        List<ActivityLog> activities =
+                activityLogRepository.findByPetId(petId);
+
+        List<NutritionLog> nutrition =
+                nutritionLogRepository.findByPetId(petId);
+
+        PetFullDto dto = new PetFullDto();
+        dto.setPet(petMapper.toDto(pet));
+        dto.setActivities(activities);
+        dto.setNutrition(nutrition);
+
+        return dto;
     }
 }
