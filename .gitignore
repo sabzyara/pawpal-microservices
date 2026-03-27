@@ -11,9 +11,11 @@ bin/
 *.ipr
 
 # ===== Python =====
+venv/
 __pycache__/
 *.pyc
-.venv/
+.env
+
 
 # ===== VS Code =====
 .vscode/

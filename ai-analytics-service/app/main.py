@@ -1,23 +1,15 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List
+from app.schemas import RecommendationRequest, RecommendationResponse, ChatRequest
 from app.predictor import generate_recommendations
+from app.huggingface_client import ask_ai
 
-app = FastAPI()   # ← ВОТ ЭТО КЛЮЧЕВО
-
-class RecommendationRequest(BaseModel):
-    species: str
-    weight: int
-    age: int
-    totalActivityMinutes: int
-    totalCalories: int
-
-class RecommendationResponse(BaseModel):
-    healthScore: int
-    riskLevel: str
-    recommendations: List[str]
+app = FastAPI(title="PawPal AI Analytics Service")
 
 @app.post("/ai/recommend", response_model=RecommendationResponse)
 def recommend(request: RecommendationRequest):
     return generate_recommendations(request.dict())
 
+
+@app.post("/ai/chat")
+def chat(req: ChatRequest):
+    return ask_ai(req.message)

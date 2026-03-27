@@ -25,10 +25,9 @@ class RecommendationModel:
         expected_activity = activity_norms.get(species, activity_norms["default"])
         expected_calories = int(weight * calorie_multiplier.get(species, calorie_multiplier["default"]))
 
-        # --- базовый health score ---
         score = 100
 
-        # ===== АКТИВНОСТЬ =====
+        # --- АКТИВНОСТЬ ---
         if activity < expected_activity * 0.6:
             recommendations.append("Daily activity level is significantly below recommended range")
             score -= 30
@@ -36,7 +35,7 @@ class RecommendationModel:
             recommendations.append("Consider slightly increasing daily activity")
             score -= 15
 
-        # ===== КАЛОРИИ =====
+        # --- КАЛОРИИ ---
         if calories > expected_calories * 1.2:
             recommendations.append("Daily calorie intake appears too high for current activity level")
             score -= 20
@@ -46,7 +45,7 @@ class RecommendationModel:
         else:
             recommendations.append("Daily calorie intake is within the normal range")
 
-        # ===== ПОВЕДЕНИЕ =====
+        # --- ПОВЕДЕНИЕ ---
         if species == "cat" and activity < 20:
             recommendations.append("Increase play sessions to improve mental stimulation")
             score -= 10
@@ -55,15 +54,13 @@ class RecommendationModel:
             recommendations.append("Additional outdoor walks are recommended")
             score -= 10
 
-        # ===== ВОЗРАСТ =====
+        # --- ВОЗРАСТ ---
         if age > 8 and activity > expected_activity:
             recommendations.append("For senior pets, monitor activity to avoid joint overload")
             score -= 5
 
-        # --- защита от отрицательных значений ---
         score = max(score, 0)
 
-        # ===== RISK LEVEL =====
         if score >= 80:
             risk_level = "LOW"
         elif score >= 50:
