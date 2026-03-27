@@ -17,5 +17,5 @@ class RecommendationResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    userId: str
+    petId: str
     token: str

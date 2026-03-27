@@ -12,4 +12,4 @@ def recommend(request: RecommendationRequest):
 
 @app.post("/ai/chat")
 def chat(req: ChatRequest):
-    return ask_ai(req.message, req.userId, req.token)
+    return ask_ai(req.message, req.petId, req.token)
