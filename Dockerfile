@@ -1,5 +1,5 @@
 # Используем Java
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk
 
 # Копируем проект
 WORKDIR /app
