@@ -4,6 +4,6 @@ WORKDIR /app
 COPY . .
 
 RUN chmod +x gradlew
-RUN ./gradlew :pet-management-service:build -x test
+RUN ./gradlew :appointment-service:build -x test
 
-CMD ["java", "-jar", "pet-management-service/build/libs/pet-management-service-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "appointment-service/build/libs/appointment-service-0.0.1-SNAPSHOT.jar"]
