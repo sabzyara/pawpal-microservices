@@ -10,7 +10,7 @@ def get_pet_data(pet_id: str, token: str):
     }
 
     response = requests.get(
-        f"http://localhost:8081/api/pets/pet/{pet_id}/full",
+        f"https://pawpal-pet-service.onrender.com/api/pets/pet/{pet_id}/full",
         headers=headers
     )
 
