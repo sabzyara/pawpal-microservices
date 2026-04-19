@@ -8,10 +8,12 @@ import com.example.pawpalapp.petmanagementservice.repository.PetOwnerRepository;
 import com.example.pawpalapp.security.AuthUser;
 import com.example.pawpalapp.security.Role;
 import com.example.pawpalapp.security.SecurityUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -95,7 +97,9 @@ public class PetOwnerService {
 
             PetOwner owner = petOwnerRepository
                     .findByUserId(userId)
-                    .orElseThrow(() -> new RuntimeException("Profile not found"));
+                    .orElseThrow(() ->
+                            new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found")
+                    );
 
             return PetOwnerMapper.toDto(owner);
 
