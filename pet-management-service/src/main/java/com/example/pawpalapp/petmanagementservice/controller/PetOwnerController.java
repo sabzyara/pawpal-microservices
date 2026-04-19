@@ -14,6 +14,11 @@ public class PetOwnerController {
         this.petOwnerService = service;
     }
 
+    @GetMapping("/me")
+    public PetOwnerResponseDto getMyProfile() {
+        return petOwnerService.getMyProfile();
+    }
+
     @PostMapping("/me")
     public void create(@RequestBody PetOwnerCreateDto dto) {
         petOwnerService.createMyProfile(dto);

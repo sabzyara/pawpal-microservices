@@ -10,6 +10,7 @@ import lombok.*;
 public class PetOwnerResponseDto {
     private Long id;
     private Long userId;
+    private String username;
     private String phoneNumber;
     private String address;
 }

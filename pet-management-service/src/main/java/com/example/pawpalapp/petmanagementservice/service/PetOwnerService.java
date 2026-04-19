@@ -72,4 +72,18 @@ public class PetOwnerService {
         return PetOwnerMapper.toDto(saved);
     }
 
+    public PetOwnerResponseDto getMyProfile() {
+
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Long userId = jwt.getClaim("userId");
+
+        PetOwner owner = petOwnerRepository
+                .findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+        return PetOwnerMapper.toDto(owner);
+    }
 }

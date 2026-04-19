@@ -19,6 +19,7 @@ public class PetOwnerMapper {
         return PetOwnerResponseDto.builder()
                 .id(owner.getId())
                 .userId(owner.getUserId())
+                .username(owner.getUsername())
                 .phoneNumber(owner.getPhoneNumber())
                 .address(owner.getAddress())
                 .build();
