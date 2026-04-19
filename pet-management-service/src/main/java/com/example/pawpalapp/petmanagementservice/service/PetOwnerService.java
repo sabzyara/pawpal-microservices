@@ -9,6 +9,7 @@ import com.example.pawpalapp.security.AuthUser;
 import com.example.pawpalapp.security.Role;
 import com.example.pawpalapp.security.SecurityUtils;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -74,9 +75,12 @@ public class PetOwnerService {
 
     public PetOwnerResponseDto getMyProfile() {
 
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (!(auth.getPrincipal() instanceof Jwt jwt)) {
+            throw new RuntimeException("JWT not found in security context");
+        }
+
 
         Long userId = jwt.getClaim("userId");
 
