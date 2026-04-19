@@ -9,9 +9,6 @@ import com.example.pawpalapp.security.AuthUser;
 import com.example.pawpalapp.security.Role;
 import com.example.pawpalapp.security.SecurityUtils;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,23 +18,20 @@ public class PetOwnerService {
 
     private final PetOwnerRepository petOwnerRepository;
 
-    public PetOwnerService(PetOwnerRepository repository, PetOwnerMapper mapper) {
+    public PetOwnerService(PetOwnerRepository repository) {
         this.petOwnerRepository = repository;
     }
 
-
+    // CREATE
     public void createMyProfile(PetOwnerCreateDto request) {
 
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
+        AuthUser current = SecurityUtils.current();
 
-        Long userId = jwt.getClaim("userId");
-        String role = jwt.getClaim("role");
-
-        if (!"OWNER".equals(role)) {
+        if (current.role() != Role.OWNER) {
             throw new AccessDeniedException("Only OWNER can create profile");
         }
+
+        Long userId = current.userId();
 
         if (petOwnerRepository.existsByUserId(userId)) {
             throw new RuntimeException("Profile already exists");
@@ -52,18 +46,19 @@ public class PetOwnerService {
         petOwnerRepository.save(petOwner);
     }
 
+    // UPDATE
     public PetOwnerResponseDto update(PetOwnerUpdateDto dto) {
 
         AuthUser current = SecurityUtils.current();
 
         if (current.role() != Role.OWNER) {
-            throw new AccessDeniedException("Only pet owners can update vet profile");
+            throw new AccessDeniedException("Only pet owners can update profile");
         }
 
-        Long targetUserId = current.userId();
+        Long userId = current.userId();
 
         PetOwner petOwner = petOwnerRepository
-                .findByUserId(targetUserId)
+                .findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Pet owner profile not found"));
 
         PetOwnerMapper.updateEntity(petOwner, dto);
@@ -73,16 +68,12 @@ public class PetOwnerService {
         return PetOwnerMapper.toDto(saved);
     }
 
+    // GET
     public PetOwnerResponseDto getMyProfile() {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        AuthUser current = SecurityUtils.current();
 
-        if (!(auth.getPrincipal() instanceof Jwt jwt)) {
-            throw new RuntimeException("JWT not found in security context");
-        }
-
-
-        Long userId = jwt.getClaim("userId");
+        Long userId = current.userId();
 
         PetOwner owner = petOwnerRepository
                 .findByUserId(userId)
