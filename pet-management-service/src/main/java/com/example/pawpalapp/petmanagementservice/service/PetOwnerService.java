@@ -9,6 +9,8 @@ import com.example.pawpalapp.security.AuthUser;
 import com.example.pawpalapp.security.Role;
 import com.example.pawpalapp.security.SecurityUtils;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -71,14 +73,35 @@ public class PetOwnerService {
     // GET
     public PetOwnerResponseDto getMyProfile() {
 
-        AuthUser current = SecurityUtils.current();
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        Long userId = current.userId();
+            if (auth == null) {
+                throw new RuntimeException("AUTH IS NULL");
+            }
 
-        PetOwner owner = petOwnerRepository
-                .findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+            System.out.println("AUTH: " + auth);
+            System.out.println("PRINCIPAL: " + auth.getPrincipal());
 
-        return PetOwnerMapper.toDto(owner);
+            AuthUser current = SecurityUtils.current();
+
+            if (current == null) {
+                throw new RuntimeException("CURRENT USER NULL");
+            }
+
+            Long userId = current.userId();
+
+            System.out.println("USER ID: " + userId);
+
+            PetOwner owner = petOwnerRepository
+                    .findByUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+            return PetOwnerMapper.toDto(owner);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 }
