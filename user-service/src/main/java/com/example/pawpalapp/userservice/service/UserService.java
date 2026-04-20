@@ -31,11 +31,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         user.setRole(userDto.getRole());
 
-        if (userDto.getRole() == Role.OWNER || userDto.getRole() == Role.ADMIN) {
-            user.setStatus(UserStatus.ACTIVE);
-        } else {
-            user.setStatus(UserStatus.PENDING);
-        }
+        user.setStatus(UserStatus.ACTIVE);
 
         User saved = userRepository.save(user);
         return UserMapper.toDto(saved);
