@@ -2,12 +2,12 @@ package com.example.pawpalapp.userservice.controller;
 
 import com.example.pawpalapp.userservice.dto.LoginRequest;
 import com.example.pawpalapp.userservice.dto.UserRegisterDto;
+import com.example.pawpalapp.userservice.dto.UserResponseDto;
 import com.example.pawpalapp.userservice.service.AuthService;
+import com.thoughtworks.xstream.core.SecurityUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -27,6 +27,11 @@ public class AuthController {
                 request.getEmail(),
                 request.getPassword()
         );
+    }
+
+    @GetMapping("/me")
+    public UserResponseDto me(HttpServletRequest request) {
+        return authService.getCurrentUser(request);
     }
 }
 

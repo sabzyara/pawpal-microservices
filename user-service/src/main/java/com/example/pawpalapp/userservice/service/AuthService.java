@@ -1,10 +1,14 @@
 package com.example.pawpalapp.userservice.service;
 
 import com.example.pawpalapp.userservice.dto.UserRegisterDto;
+import com.example.pawpalapp.userservice.dto.UserResponseDto;
+import com.example.pawpalapp.userservice.mapper.UserMapper;
 import com.example.pawpalapp.userservice.model.User;
 import com.example.pawpalapp.userservice.model.enums.Role;
 import com.example.pawpalapp.userservice.model.enums.UserStatus;
 import com.example.pawpalapp.userservice.repository.UserRepository;
+import com.thoughtworks.xstream.core.SecurityUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -59,5 +63,23 @@ public class AuthService {
 
         return jwtService.generateToken(user);
     }
+    public UserResponseDto getCurrentUser(HttpServletRequest request) {
+
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("No token");
+        }
+
+        String token = authHeader.substring(7);
+
+        String email = jwtService.extractEmail(token);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return UserMapper.toDto(user);
+    }
+
 }
 
