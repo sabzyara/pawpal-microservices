@@ -12,10 +12,12 @@ import com.example.pawpalapp.specialistservice.model.ServiceProvider;
 import com.example.pawpalapp.specialistservice.model.Veterinarian;
 import com.example.pawpalapp.specialistservice.repository.VeterinarianRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -58,6 +60,21 @@ public class VeterinarianService {
                 .stream()
                 .map(VetMapper::toDto)
                 .toList();
+    }
+
+    public VetResponseDto getMyProfile() {
+
+        AuthUser current = SecurityUtils.current();
+
+        Long userId = current.userId();
+
+        Veterinarian vet = veterinarianRepository
+                .findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found")
+                );
+
+        return VetMapper.toDto(vet);
     }
 
     public VetResponseDto getById(Long id) {

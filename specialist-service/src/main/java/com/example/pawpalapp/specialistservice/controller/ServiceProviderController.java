@@ -25,6 +25,11 @@ public class ServiceProviderController {
         serviceProviderService.createMyProfile(request);
     }
 
+    @GetMapping("/me")
+    public ServiceProviderResponseDto getMyProfile() {
+        return serviceProviderService.getMyProfile();
+    }
+
     // GET ALL SERVICE PROVIDERS
     @GetMapping
     public ResponseEntity<List<ServiceProviderResponseDto>> getAll() {

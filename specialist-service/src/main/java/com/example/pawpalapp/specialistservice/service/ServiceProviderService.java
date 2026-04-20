@@ -11,10 +11,12 @@ import com.example.pawpalapp.specialistservice.model.Veterinarian;
 import com.example.pawpalapp.specialistservice.repository.ServiceProviderRepository;
 import com.example.pawpalapp.specialistservice.repository.VeterinarianRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -56,6 +58,22 @@ public class ServiceProviderService {
                 .map(ServiceProviderMapper::toDto)
                 .toList();
     }
+
+    public ServiceProviderResponseDto getMyProfile() {
+
+        AuthUser current = SecurityUtils.current();
+
+        Long userId = current.userId();
+
+        ServiceProvider serviceProvider = serviceProviderRepository
+                .findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found")
+                );
+
+        return ServiceProviderMapper.toDto(serviceProvider);
+    }
+
 
     public ServiceProviderResponseDto update(ServiceProviderUpdateDto dto) {
 

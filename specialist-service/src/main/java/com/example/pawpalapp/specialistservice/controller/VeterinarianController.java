@@ -23,6 +23,11 @@ public class VeterinarianController {
         veterinarianService.createMyProfile(request);
     }
 
+    @GetMapping("/me")
+    public VetResponseDto getMyProfile() {
+        return veterinarianService.getMyProfile();
+    }
+
     // GET ALL VETS
     @GetMapping
     public ResponseEntity<List<VetResponseDto>> getAll() {
