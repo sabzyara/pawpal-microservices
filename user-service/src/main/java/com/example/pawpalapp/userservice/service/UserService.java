@@ -71,6 +71,8 @@ public class UserService {
 
         // 🔥 потом удаляем пользователя
         userRepository.deleteById(userId);
+        System.out.println("CALL PET DELETE");
+        restTemplate.delete("http://pet-management/api/pet-owners/user/" + userId);
     }
 
     // GET USER BY ID

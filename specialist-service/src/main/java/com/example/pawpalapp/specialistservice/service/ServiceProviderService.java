@@ -99,6 +99,7 @@ public class ServiceProviderService {
 
     public void deleteByUserId(Long userId) {
         serviceProviderRepository.deleteByUserId(userId);
+
     }
 }
 
