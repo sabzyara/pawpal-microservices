@@ -3,8 +3,10 @@ package com.example.pawpalapp.userservice.controller;
 import com.example.pawpalapp.userservice.dto.UserCreateDto;
 import com.example.pawpalapp.userservice.dto.UserResponseDto;
 import com.example.pawpalapp.userservice.service.UserService;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,8 +43,14 @@ public class UserController {
 
     // Delete
     @DeleteMapping("/me")
-    public void deleteCurrentUser(Authentication authentication) {
-        String email = authentication.getName();
-        userService.deleteByEmail(email);
+    public void deleteCurrentUser() {
+
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Long userId = jwt.getClaim("userId");
+
+        userService.deleteById(userId);
     }
 }
