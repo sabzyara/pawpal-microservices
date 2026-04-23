@@ -50,29 +50,28 @@ public class UserService {
     // DELETE USER
     public void deleteById(Long userId) {
 
-        // 🔥 удаляем связанные профили
         try {
             restTemplate.delete("http://pet-management/api/pet-owners/user/" + userId);
+            System.out.println("PET DELETED");
         } catch (Exception e) {
-            System.out.println("PetOwner not found");
+            System.out.println("PET ERROR: " + e.getMessage());
         }
 
         try {
             restTemplate.delete("http://specialist-service/api/veterinarians/user/" + userId);
+            System.out.println("VET DELETED");
         } catch (Exception e) {
-            System.out.println("Vet not found");
+            System.out.println("VET ERROR: " + e.getMessage());
         }
 
         try {
             restTemplate.delete("http://specialist-service/api/service-providers/user/" + userId);
+            System.out.println("SERVICE DELETED");
         } catch (Exception e) {
-            System.out.println("ServiceProvider not found");
+            System.out.println("SERVICE ERROR: " + e.getMessage());
         }
 
-        // 🔥 потом удаляем пользователя
         userRepository.deleteById(userId);
-        System.out.println("CALL PET DELETE");
-        restTemplate.delete("http://pet-management/api/pet-owners/user/" + userId);
     }
 
     // GET USER BY ID
