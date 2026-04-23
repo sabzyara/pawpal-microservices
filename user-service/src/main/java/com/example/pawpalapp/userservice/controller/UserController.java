@@ -40,8 +40,9 @@ public class UserController {
 
 
     // Delete
-    @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    @DeleteMapping("/me")
+    public void deleteCurrentUser(Authentication authentication) {
+        String email = authentication.getName();
+        userService.deleteByEmail(email);
     }
 }

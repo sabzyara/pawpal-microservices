@@ -46,11 +46,11 @@ public class UserService {
     }
 
     // DELETE USER
-    public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User is not found");
-        }
-        userRepository.deleteById(id);
+    public void deleteByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        userRepository.delete(user);
     }
 
     // GET USER BY ID
