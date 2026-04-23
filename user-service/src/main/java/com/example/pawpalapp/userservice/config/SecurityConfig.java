@@ -32,7 +32,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+
+                        // 👇 РАЗРЕШАЕМ ДЛЯ ВСЕХ ЗАЛОГИНЕННЫХ
+                        .requestMatchers("/users/me").authenticated()
+
+                        // 👇 только админ может удалять других
                         .requestMatchers("/users/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 );
 
