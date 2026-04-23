@@ -72,6 +72,7 @@ public class UserService {
         }
 
         userRepository.deleteById(userId);
+        System.out.println("🔥 DELETE METHOD CALLED: " + userId);
     }
 
     // GET USER BY ID
