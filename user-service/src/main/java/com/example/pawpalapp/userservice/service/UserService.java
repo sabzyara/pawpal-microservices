@@ -47,34 +47,35 @@ public class UserService {
                 .toList();
     }
 
-    // DELETE USER
     public void deleteById(Long userId) {
+
+        System.out.println("🔥 DELETE START " + userId);
 
         try {
             restTemplate.delete("http://pet-management/api/pet-owners/user/" + userId);
-            System.out.println("PET DELETED");
+            System.out.println("✅ PET OK");
         } catch (Exception e) {
-            System.out.println("PET ERROR: " + e.getMessage());
+            System.out.println("❌ PET ERROR: " + e.getMessage());
         }
 
         try {
             restTemplate.delete("http://specialist-service/api/veterinarians/user/" + userId);
-            System.out.println("VET DELETED");
+            System.out.println("✅ VET OK");
         } catch (Exception e) {
-            System.out.println("VET ERROR: " + e.getMessage());
+            System.out.println("❌ VET ERROR: " + e.getMessage());
         }
 
         try {
             restTemplate.delete("http://specialist-service/api/service-providers/user/" + userId);
-            System.out.println("SERVICE DELETED");
+            System.out.println("✅ SERVICE OK");
         } catch (Exception e) {
-            System.out.println("SERVICE ERROR: " + e.getMessage());
+            System.out.println("❌ SERVICE ERROR: " + e.getMessage());
         }
 
         userRepository.deleteById(userId);
-        System.out.println("🔥 DELETE METHOD CALLED: " + userId);
-    }
 
+        System.out.println("🔥 USER DELETED");
+    }
     // GET USER BY ID
     public UserResponseDto getUserById(Long id) {
         User user = userRepository.findById(id)
