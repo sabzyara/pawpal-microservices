@@ -28,4 +28,9 @@ public class PetOwnerController {
     public PetOwnerResponseDto update(@RequestBody PetOwnerUpdateDto dto) {
         return petOwnerService.update(dto);
     }
+
+    @DeleteMapping("/user/{userId}")
+    public void deleteByUserId(@PathVariable Long userId) {
+        petOwnerService.deleteByUserId(userId);
+    }
 }

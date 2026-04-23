@@ -97,8 +97,8 @@ public class ServiceProviderService {
     }
 
 
-    public void delete(Long id) {
-        serviceProviderRepository.deleteById(id);
+    public void deleteByUserId(Long userId) {
+        serviceProviderRepository.deleteByUserId(userId);
     }
 }
 

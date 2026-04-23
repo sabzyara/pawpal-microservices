@@ -108,4 +108,8 @@ public class PetOwnerService {
             throw e;
         }
     }
+    public void deleteByUserId(Long userId) {
+        petOwnerRepository.deleteByUserId(userId);
+    }
+
 }

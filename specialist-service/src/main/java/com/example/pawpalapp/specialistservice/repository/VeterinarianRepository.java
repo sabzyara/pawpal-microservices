@@ -10,6 +10,7 @@ public interface VeterinarianRepository extends JpaRepository<Veterinarian, Long
     Optional<Veterinarian> findByUserId(Long userId);
 
     boolean existsByUserId(Long userId);
+    void deleteByUserId(Long userId);
 
 }
 

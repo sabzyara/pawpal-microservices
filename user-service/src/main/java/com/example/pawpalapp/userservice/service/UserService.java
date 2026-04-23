@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RestTemplate restTemplate;
 
     // CREATE USER
     public UserResponseDto createUser(UserCreateDto userDto) {
@@ -46,8 +48,29 @@ public class UserService {
     }
 
     // DELETE USER
-    public void deleteById(Long id) {
-        userRepository.deleteById(id);
+    public void deleteById(Long userId) {
+
+        // 🔥 удаляем связанные профили
+        try {
+            restTemplate.delete("http://pet-management/api/pet-owners/user/" + userId);
+        } catch (Exception e) {
+            System.out.println("PetOwner not found");
+        }
+
+        try {
+            restTemplate.delete("http://specialist-service/api/veterinarians/user/" + userId);
+        } catch (Exception e) {
+            System.out.println("Vet not found");
+        }
+
+        try {
+            restTemplate.delete("http://specialist-service/api/service-providers/user/" + userId);
+        } catch (Exception e) {
+            System.out.println("ServiceProvider not found");
+        }
+
+        // 🔥 потом удаляем пользователя
+        userRepository.deleteById(userId);
     }
 
     // GET USER BY ID

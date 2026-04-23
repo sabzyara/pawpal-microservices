@@ -44,9 +44,9 @@ public class ServiceProviderController {
     }
 
     //DELETE SERVICE PROVIDER
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        serviceProviderService.delete(id);
+    @DeleteMapping("/user/{userId}")
+    public void deleteByUserId(@PathVariable Long userId) {
+        serviceProviderService.deleteByUserId(userId);
     }
 }
 

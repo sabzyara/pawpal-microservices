@@ -42,8 +42,8 @@ public class VeterinarianController {
     }
 
     // DELETE VET
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        veterinarianService.delete(id);
+    @DeleteMapping("/user/{userId}")
+    public void deleteByUserId(@PathVariable Long userId) {
+        veterinarianService.deleteByUserId(userId);
     }
 }
