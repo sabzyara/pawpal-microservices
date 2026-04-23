@@ -4,8 +4,9 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.jwt.*;
+
+import javax.crypto.spec.SecretKeySpec;
 
 @Configuration
 public class JwtConfig {
@@ -13,11 +14,22 @@ public class JwtConfig {
     @Value("${jwt.secret}")
     private String secret;
 
+    // 🔥 ДЛЯ ГЕНЕРАЦИИ
     @Bean
-    JwtEncoder jwtEncoder() {
+    public JwtEncoder jwtEncoder() {
         return new NimbusJwtEncoder(
                 new ImmutableSecret<>(secret.getBytes())
         );
     }
-}
 
+    // 🔥 ДЛЯ ЧТЕНИЯ (ЭТО ТЕБЕ НЕ ХВАТАЛО)
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        SecretKeySpec secretKey = new SecretKeySpec(
+                secret.getBytes(),
+                "HmacSHA256"
+        );
+
+        return NimbusJwtDecoder.withSecretKey(secretKey).build();
+    }
+}
