@@ -108,5 +108,6 @@ public class VeterinarianService {
 
     public void deleteByUserId(Long userId) {
         veterinarianRepository.deleteByUserId(userId);
+
     }
 }
