@@ -12,6 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.List;
 
@@ -49,32 +52,54 @@ public class UserService {
 
     public void deleteById(Long userId) {
 
-        System.out.println("🔥 DELETE START " + userId);
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        String token = jwt.getTokenValue();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
-            restTemplate.delete("https://pawpal-gateway.onrender.com/pet-management/api/pet-owners/user/" + userId);
+            restTemplate.exchange(
+                    "https://pawpal-gateway.onrender.com/pet-management/api/pet-owners/user/" + userId,
+                    HttpMethod.DELETE,
+                    entity,
+                    Void.class
+            );
             System.out.println("✅ PET OK");
         } catch (Exception e) {
             System.out.println("❌ PET ERROR: " + e.getMessage());
         }
 
         try {
-            restTemplate.delete("https://pawpal-gateway.onrender.com/specialist-service/api/veterinarians/user/" + userId);
+            restTemplate.exchange(
+                    "https://pawpal-gateway.onrender.com/specialist-service/api/veterinarians/user/" + userId,
+                    HttpMethod.DELETE,
+                    entity,
+                    Void.class
+            );
             System.out.println("✅ VET OK");
         } catch (Exception e) {
             System.out.println("❌ VET ERROR: " + e.getMessage());
         }
 
         try {
-            restTemplate.delete("https://pawpal-gateway.onrender.com/specialist-service/api/service-providers/user/" + userId);
+            restTemplate.exchange(
+                    "https://pawpal-gateway.onrender.com/specialist-service/api/service-providers/user/" + userId,
+                    HttpMethod.DELETE,
+                    entity,
+                    Void.class
+            );
             System.out.println("✅ SERVICE OK");
         } catch (Exception e) {
             System.out.println("❌ SERVICE ERROR: " + e.getMessage());
         }
 
         userRepository.deleteById(userId);
-
-        System.out.println("🔥 USER DELETED");
     }
     // GET USER BY ID
     public UserResponseDto getUserById(Long id) {
