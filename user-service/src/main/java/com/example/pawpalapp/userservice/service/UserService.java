@@ -52,21 +52,21 @@ public class UserService {
         System.out.println("🔥 DELETE START " + userId);
 
         try {
-            restTemplate.delete("http://pet-management/api/pet-owners/user/" + userId);
+            restTemplate.delete("https://pawpal-gateway.onrender.com/pet-management/api/pet-owners/user/" + userId);
             System.out.println("✅ PET OK");
         } catch (Exception e) {
             System.out.println("❌ PET ERROR: " + e.getMessage());
         }
 
         try {
-            restTemplate.delete("http://specialist-service/api/veterinarians/user/" + userId);
+            restTemplate.delete("https://pawpal-gateway.onrender.com/specialist-service/api/veterinarians/user/" + userId);
             System.out.println("✅ VET OK");
         } catch (Exception e) {
             System.out.println("❌ VET ERROR: " + e.getMessage());
         }
 
         try {
-            restTemplate.delete("http://specialist-service/api/service-providers/user/" + userId);
+            restTemplate.delete("https://pawpal-gateway.onrender.com/specialist-service/api/service-providers/user/" + userId);
             System.out.println("✅ SERVICE OK");
         } catch (Exception e) {
             System.out.println("❌ SERVICE ERROR: " + e.getMessage());
