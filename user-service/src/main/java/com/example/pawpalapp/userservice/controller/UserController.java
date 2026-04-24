@@ -52,7 +52,6 @@ public class UserController {
         Long userId = jwt.getClaim("userId");
 
         userService.deleteById(userId);
-        throw new RuntimeException("NEW CODE CHECK");
 
     }
 }
