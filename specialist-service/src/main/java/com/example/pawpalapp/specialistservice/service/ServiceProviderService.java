@@ -1,5 +1,6 @@
 package com.example.pawpalapp.specialistservice.service;
 
+import com.example.pawpalapp.common.storage.FileStorageService;
 import com.example.pawpalapp.security.AuthUser;
 import com.example.pawpalapp.security.Role;
 import com.example.pawpalapp.security.SecurityUtils;
@@ -16,6 +17,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.List;
 public class ServiceProviderService {
 
     private final ServiceProviderRepository serviceProviderRepository;
+    private final FileStorageService fileStorageService;
 
     public void createMyProfile(ServiceProviderCreateDto request) {
 
@@ -100,6 +103,22 @@ public class ServiceProviderService {
     public void deleteByUserId(Long userId) {
         serviceProviderRepository.deleteByUserId(userId);
 
+    }
+
+    public String uploadAvatar(MultipartFile file) {
+
+        AuthUser current = SecurityUtils.current();
+
+        ServiceProvider sp = serviceProviderRepository
+                .findByUserId(current.userId())
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+        String url = fileStorageService.upload(file);
+
+        sp.setAvatarUrl(url);
+        serviceProviderRepository.save(sp);
+
+        return url;
     }
 }
 

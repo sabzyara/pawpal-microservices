@@ -4,6 +4,6 @@ WORKDIR /app
 COPY . .
 
 RUN chmod +x gradlew
-RUN ./gradlew :api-gateway:build -x test
+RUN ./gradlew :specialist-service:build -x test
 
-CMD ["java", "-jar", "api-gateway/build/libs/api-gateway-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "specialist-service/build/libs/specialist-service-0.0.1-SNAPSHOT.jar"]

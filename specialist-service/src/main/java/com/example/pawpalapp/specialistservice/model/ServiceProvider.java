@@ -30,4 +30,6 @@ public class ServiceProvider {
     private String phoneNumber;
 
     private String serviceCategory;
+
+    private String avatarUrl;
 }

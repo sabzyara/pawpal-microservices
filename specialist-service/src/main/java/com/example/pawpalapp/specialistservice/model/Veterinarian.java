@@ -36,4 +36,6 @@ public class Veterinarian {
 
     private int experienceYears;
 
+    private String avatarUrl;
+
 }

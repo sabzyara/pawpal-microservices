@@ -1,5 +1,6 @@
 package com.example.pawpalapp.petmanagementservice.service;
 
+import com.example.pawpalapp.common.storage.FileStorageService;
 import com.example.pawpalapp.petmanagementservice.dto.petowner.*;
 import com.example.pawpalapp.petmanagementservice.mapper.PetOwnerMapper;
 import com.example.pawpalapp.petmanagementservice.model.Pet;
@@ -13,6 +14,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -21,9 +23,11 @@ import java.util.List;
 public class PetOwnerService {
 
     private final PetOwnerRepository petOwnerRepository;
+    private final FileStorageService fileStorageService;
 
-    public PetOwnerService(PetOwnerRepository repository) {
+    public PetOwnerService(PetOwnerRepository repository, FileStorageService fileStorageService) {
         this.petOwnerRepository = repository;
+        this.fileStorageService = fileStorageService;
     }
 
     // CREATE
@@ -112,4 +116,19 @@ public class PetOwnerService {
         petOwnerRepository.deleteByUserId(userId);
     }
 
+    public String uploadAvatar(MultipartFile file) {
+
+        AuthUser current = SecurityUtils.current();
+
+        PetOwner owner = petOwnerRepository
+                .findByUserId(current.userId())
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+        String url = fileStorageService.upload(file);
+
+        owner.setAvatarUrl(url);
+        petOwnerRepository.save(owner);
+
+        return url;
+    }
 }

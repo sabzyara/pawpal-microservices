@@ -9,6 +9,7 @@ import com.example.pawpalapp.specialistservice.service.ServiceProviderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -47,6 +48,11 @@ public class ServiceProviderController {
     @DeleteMapping("/user/{userId}")
     public void deleteByUserId(@PathVariable Long userId) {
         serviceProviderService.deleteByUserId(userId);
+    }
+
+    @PostMapping("/me/avatar")
+    public String uploadAvatar(@RequestParam MultipartFile file) {
+        return serviceProviderService.uploadAvatar(file);
     }
 }
 

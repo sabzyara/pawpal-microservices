@@ -3,6 +3,7 @@ package com.example.pawpalapp.petmanagementservice.controller;
 import com.example.pawpalapp.petmanagementservice.dto.petowner.*;
 import com.example.pawpalapp.petmanagementservice.service.PetOwnerService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/pet-owners")
@@ -32,5 +33,9 @@ public class PetOwnerController {
     @DeleteMapping("/user/{userId}")
     public void deleteByUserId(@PathVariable Long userId) {
         petOwnerService.deleteByUserId(userId);
+    }
+    @PostMapping("/me/avatar")
+    public String uploadAvatar(@RequestParam MultipartFile file) {
+        return petOwnerService.uploadAvatar(file);
     }
 }

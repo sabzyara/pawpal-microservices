@@ -41,5 +41,5 @@ public class PetOwner {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-
+    private String avatarUrl;
 }
