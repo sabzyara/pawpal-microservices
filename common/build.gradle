@@ -17,22 +17,12 @@ java {
 
 dependencies {
 
-    // для MultipartFile
-    implementation 'org.springframework:spring-web'
+    api platform('org.springframework.boot:spring-boot-dependencies:3.2.5')
 
-    // если используешь @Service (лучше оставить)
-    implementation 'org.springframework.boot:spring-boot-starter'
+    api 'org.springframework:spring-web'
+    api 'org.springframework.boot:spring-boot-starter'
+    api 'com.cloudinary:cloudinary-http44:1.33.0'
 
-    // Cloudinary (загрузка фото)
-    implementation 'com.cloudinary:cloudinary-http44:1.33.0'
-
-
-    // тесты (оставь как есть)
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-test {
-    useJUnitPlatform()
 }
