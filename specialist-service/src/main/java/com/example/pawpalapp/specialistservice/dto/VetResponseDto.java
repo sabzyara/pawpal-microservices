@@ -19,5 +19,6 @@ public class VetResponseDto {
     private String licenseNumber;
     private String clinicName;
     private Integer experienceYears;
+    private String avatarUrl;
 }
 

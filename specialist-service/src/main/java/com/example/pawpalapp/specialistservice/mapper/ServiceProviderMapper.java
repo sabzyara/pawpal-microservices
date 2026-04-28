@@ -24,7 +24,8 @@ public class ServiceProviderMapper {
                 s.getFirstName(),
                 s.getLastName(),
                 s.getPhoneNumber(),
-                s.getServiceCategory()
+                s.getServiceCategory(),
+                s.getAvatarUrl()
         );
     }
 

@@ -16,5 +16,6 @@ public class ServiceProviderResponseDto {
     private String lastName;
     private String phoneNumber;
     private String serviceCategory;
+    private String avatarUrl;
 }
 

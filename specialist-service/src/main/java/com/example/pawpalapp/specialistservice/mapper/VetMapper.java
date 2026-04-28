@@ -27,7 +27,8 @@ public class VetMapper {
                 s.getPhoneNumber(),
                 s.getLicenseNumber(),
                 s.getClinicName(),
-                s.getExperienceYears()
+                s.getExperienceYears(),
+                s.getAvatarUrl()
         );
     }
 
