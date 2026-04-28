@@ -49,7 +49,7 @@ public class VeterinarianController {
     }
 
     @PostMapping("/me/avatar")
-    public String uploadAvatar(@RequestParam MultipartFile file) {
+    public String uploadAvatar(@RequestParam("file") MultipartFile file) {
         return veterinarianService.uploadAvatar(file);
     }
 }

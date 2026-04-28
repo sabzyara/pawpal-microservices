@@ -34,6 +34,8 @@ public class PetOwnerController {
     public void deleteByUserId(@PathVariable Long userId) {
         petOwnerService.deleteByUserId(userId);
     }
+
+
     @PostMapping("/me/avatar")
     public String uploadAvatar(@RequestParam("file") MultipartFile file) {
         return petOwnerService.uploadAvatar(file);

@@ -51,7 +51,7 @@ public class ServiceProviderController {
     }
 
     @PostMapping("/me/avatar")
-    public String uploadAvatar(@RequestParam MultipartFile file) {
+    public String uploadAvatar(@RequestParam("file") MultipartFile file) {
         return serviceProviderService.uploadAvatar(file);
     }
 }
