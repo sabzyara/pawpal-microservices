@@ -28,7 +28,7 @@ import java.util.List;
 public class VeterinarianService {
 
     private final VeterinarianRepository veterinarianRepository;
-    FileStorageService fileStorageService;
+    private final FileStorageService fileStorageService;
 
     public void createMyProfile(VetCreateDto request) {
 
