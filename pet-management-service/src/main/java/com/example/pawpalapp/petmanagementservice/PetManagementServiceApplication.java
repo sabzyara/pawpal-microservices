@@ -6,7 +6,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 
 @EnableDiscoveryClient
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.example.pawpalapp")
 public class PetManagementServiceApplication {
 
 	public static void main(String[] args) {
