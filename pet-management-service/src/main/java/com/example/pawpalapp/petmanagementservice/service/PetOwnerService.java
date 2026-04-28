@@ -118,13 +118,21 @@ public class PetOwnerService {
 
     public String uploadAvatar(MultipartFile file) {
 
+        System.out.println("🔥 START UPLOAD");
+        System.out.println("FILE: " + file);
+
         AuthUser current = SecurityUtils.current();
+        System.out.println("USER ID: " + current.userId());
 
         PetOwner owner = petOwnerRepository
                 .findByUserId(current.userId())
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
 
+        System.out.println("OWNER FOUND");
+
         String url = fileStorageService.upload(file);
+
+        System.out.println("URL: " + url);
 
         owner.setAvatarUrl(url);
         petOwnerRepository.save(owner);
