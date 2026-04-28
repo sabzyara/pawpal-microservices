@@ -13,4 +13,5 @@ public class PetOwnerResponseDto {
     private String username;
     private String phoneNumber;
     private String address;
+    private String avatarUrl;
 }

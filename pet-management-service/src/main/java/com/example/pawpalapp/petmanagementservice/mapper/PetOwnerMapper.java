@@ -22,6 +22,7 @@ public class PetOwnerMapper {
                 .username(owner.getUsername())
                 .phoneNumber(owner.getPhoneNumber())
                 .address(owner.getAddress())
+                .avatarUrl(owner.getAvatarUrl())
                 .build();
     }
 
