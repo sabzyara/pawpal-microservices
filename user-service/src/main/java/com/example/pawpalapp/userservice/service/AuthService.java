@@ -34,23 +34,36 @@ public class AuthService {
 
     public void register(UserRegisterDto request) {
 
+        System.out.println("START REGISTER");
+
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists");
         }
 
-        UserStatus status = UserStatus.ACTIVE;
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
-        user.setStatus(status);
+        user.setStatus(UserStatus.ACTIVE);
 
         userRepository.save(user);
-        emailService.sendEmail(
-                user.getEmail(),
-                "Welcome to PawPal 🐾",
-                "Your account has been successfully created!"
-        );
+        System.out.println("USER SAVED: " + user.getEmail());
+
+        try {
+            System.out.println("TRY SEND EMAIL...");
+
+            emailService.sendEmail(
+                    user.getEmail(),
+                    "Welcome to PawPal 🐾",
+                    "Your account has been successfully created!"
+            );
+
+            System.out.println("EMAIL SENT SUCCESS");
+
+        } catch (Exception e) {
+            System.out.println("EMAIL ERROR ❌");
+            e.printStackTrace(); // 🔥 САМОЕ ВАЖНОЕ
+        }
     }
 
     public String login(String email, String password) {
