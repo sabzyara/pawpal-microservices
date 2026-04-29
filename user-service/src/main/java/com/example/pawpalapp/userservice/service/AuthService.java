@@ -30,6 +30,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public void register(UserRegisterDto request) {
 
@@ -45,6 +46,11 @@ public class AuthService {
         user.setStatus(status);
 
         userRepository.save(user);
+        emailService.sendEmail(
+                user.getEmail(),
+                "Welcome to PawPal 🐾",
+                "Your account has been successfully created!"
+        );
     }
 
     public String login(String email, String password) {
