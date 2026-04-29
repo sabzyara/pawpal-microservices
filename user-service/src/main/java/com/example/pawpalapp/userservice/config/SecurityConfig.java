@@ -33,15 +33,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
 
-
                         // 👇 РАЗРЕШАЕМ ДЛЯ ВСЕХ ЗАЛОГИНЕННЫХ
                         .requestMatchers("/users/me").authenticated()
 
                         // 👇 только админ может удалять других
-                        // .requestMatchers("/users/**").hasRole("ADMIN")
+                        .requestMatchers("/users/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
-                );
+                )
+        .oauth2ResourceServer(oauth -> oauth.jwt());
 
 
 
