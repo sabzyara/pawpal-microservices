@@ -25,6 +25,8 @@ public class PetMapper {
                 .id(pet.getId())
                 .name(pet.getName())
                 .species(pet.getSpecies())
+                .breed(pet.getBreed())
+                .gender(pet.getGender())
                 .age(pet.getAge())
                 .weight(pet.getWeight())
                 .healthStatus(pet.getHealthStatus())

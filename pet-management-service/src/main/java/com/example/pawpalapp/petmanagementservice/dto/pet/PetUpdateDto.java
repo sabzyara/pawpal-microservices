@@ -1,5 +1,6 @@
 package com.example.pawpalapp.petmanagementservice.dto.pet;
 
+
 import lombok.*;
 
 @Getter
@@ -7,8 +8,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PetResponseDto {
-    private Long id;
+public class PetUpdateDto {
+
     private String name;
     private String species;
     private String breed;
@@ -16,5 +17,4 @@ public class PetResponseDto {
     private int age;
     private int weight;
     private String healthStatus;
-    private String avatarUrl;
 }

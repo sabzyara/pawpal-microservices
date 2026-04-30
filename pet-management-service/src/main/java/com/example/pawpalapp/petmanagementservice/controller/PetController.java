@@ -43,4 +43,15 @@ public class PetController {
     ) {
         return petService.uploadAvatar(petId, file);
     }
+    @PutMapping("/{petId}")
+    public PetResponseDto update(
+            @PathVariable Long petId,
+            @RequestBody PetUpdateDto dto
+    ) {
+        return petService.update(petId, dto);
+    }
+    @DeleteMapping("/{petId}")
+    public void delete(@PathVariable Long petId) {
+        petService.delete(petId);
+    }
 }

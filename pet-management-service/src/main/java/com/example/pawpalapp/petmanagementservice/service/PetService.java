@@ -176,4 +176,51 @@ public class PetService {
 
         return url;
     }
+
+    public PetResponseDto update(Long petId, PetUpdateDto dto) {
+
+        AuthUser current = SecurityUtils.current();
+
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new RuntimeException("Pet not found"));
+
+        PetOwner owner = petOwnerRepository
+                .findByUserId(current.userId())
+                .orElseThrow(() -> new RuntimeException("Owner not found"));
+
+        // 🔐 проверка владельца
+        if (!pet.getOwnerId().equals(owner.getId())) {
+            throw new RuntimeException("Not your pet");
+        }
+
+        pet.setName(dto.getName());
+        pet.setSpecies(dto.getSpecies());
+        pet.setBreed(dto.getBreed());
+        pet.setGender(dto.getGender());
+        pet.setAge(dto.getAge());
+        pet.setWeight(dto.getWeight());
+        pet.setHealthStatus(dto.getHealthStatus());
+
+        Pet saved = petRepository.save(pet);
+
+        return petMapper.toDto(saved);
+    }
+
+    public void delete(Long petId) {
+
+        AuthUser current = SecurityUtils.current();
+
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new RuntimeException("Pet not found"));
+
+        PetOwner owner = petOwnerRepository
+                .findByUserId(current.userId())
+                .orElseThrow(() -> new RuntimeException("Owner not found"));
+
+        if (!pet.getOwnerId().equals(owner.getId())) {
+            throw new RuntimeException("Not your pet");
+        }
+
+        petRepository.delete(pet);
+    }
 }
