@@ -14,4 +14,5 @@ public class PetResponseDto {
     private int age;
     private int weight;
     private String healthStatus;
+    private String avatarUrl;
 }

@@ -28,6 +28,7 @@ public class PetMapper {
                 .age(pet.getAge())
                 .weight(pet.getWeight())
                 .healthStatus(pet.getHealthStatus())
+                .avatarUrl(pet.getAvatarUrl())
                 .build();
     }
 }

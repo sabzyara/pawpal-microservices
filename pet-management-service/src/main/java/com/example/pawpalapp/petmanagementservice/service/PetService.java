@@ -15,6 +15,8 @@ import com.example.pawpalapp.security.Role;
 import com.example.pawpalapp.security.SecurityUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import com.example.pawpalapp.common.storage.FileStorageService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,13 +29,15 @@ public class PetService {
     private final PetOwnerRepository petOwnerRepository;
     private final ActivityLogRepository activityLogRepository;
     private final NutritionLogRepository nutritionLogRepository;
+    private final FileStorageService fileStorageService;
 
-    public PetService(PetRepository petRepository, PetMapper petMapper, PetOwnerRepository petOwnerRepository, ActivityLogRepository activityLogRepository, NutritionLogRepository nutritionLogRepository) {
+    public PetService(PetRepository petRepository, PetMapper petMapper, PetOwnerRepository petOwnerRepository, ActivityLogRepository activityLogRepository, NutritionLogRepository nutritionLogRepository, FileStorageService fileStorageService) {
         this.petRepository = petRepository;
         this.petMapper = petMapper;
         this.petOwnerRepository = petOwnerRepository;
         this.activityLogRepository = activityLogRepository;
         this.nutritionLogRepository = nutritionLogRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     public PetResponseDto create(PetCreateDto dto) {
@@ -147,5 +151,29 @@ public class PetService {
         dto.setNutrition(nutrition);
 
         return dto;
+    }
+
+    public String uploadAvatar(Long petId, MultipartFile file) {
+
+        AuthUser current = SecurityUtils.current();
+
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new RuntimeException("Pet not found"));
+
+        // 🔐 проверка владельца
+        PetOwner owner = petOwnerRepository
+                .findByUserId(current.userId())
+                .orElseThrow(() -> new RuntimeException("Owner not found"));
+
+        if (!pet.getOwnerId().equals(owner.getId())) {
+            throw new RuntimeException("Not your pet");
+        }
+
+        String url = fileStorageService.upload(file);
+
+        pet.setAvatarUrl(url);
+        petRepository.save(pet);
+
+        return url;
     }
 }

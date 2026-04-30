@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Pet {
+public class  Pet {
 
     @Id
     @GeneratedValue(
@@ -42,4 +42,7 @@ public class Pet {
     private int weight;
 
     private String healthStatus;
+    private String avatarUrl;
+
+    
 }

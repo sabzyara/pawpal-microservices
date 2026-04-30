@@ -49,21 +49,21 @@ public class AuthService {
         userRepository.save(user);
         System.out.println("USER SAVED: " + user.getEmail());
 
-        try {
-            System.out.println("TRY SEND EMAIL...");
-
-            emailService.sendEmail(
-                    user.getEmail(),
-                    "Welcome to PawPal 🐾",
-                    "Your account has been successfully created!"
-            );
-
-            System.out.println("EMAIL SENT SUCCESS");
-
-        } catch (Exception e) {
-            System.out.println("EMAIL ERROR ❌");
-            e.printStackTrace(); // 🔥 САМОЕ ВАЖНОЕ
-        }
+//        try {
+//            System.out.println("TRY SEND EMAIL...");
+//
+//            emailService.sendEmail(
+//                    user.getEmail(),
+//                    "Welcome to PawPal 🐾",
+//                    "Your account has been successfully created!"
+//            );
+//
+//            System.out.println("EMAIL SENT SUCCESS");
+//
+//        } catch (Exception e) {
+//            System.out.println("EMAIL ERROR ❌");
+//            e.printStackTrace(); // 🔥 САМОЕ ВАЖНОЕ
+//        }
     }
 
     public String login(String email, String password) {

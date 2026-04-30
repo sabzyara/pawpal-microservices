@@ -3,6 +3,7 @@ package com.example.pawpalapp.petmanagementservice.controller;
 import com.example.pawpalapp.petmanagementservice.dto.pet.*;
 import com.example.pawpalapp.petmanagementservice.service.PetService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -33,5 +34,13 @@ public class PetController {
     @GetMapping("/pet/{petId}/full")
     public PetFullDto getByPet(@PathVariable Long petId) {
         return petService.getByPetId(petId);
+    }
+
+    @PostMapping("/{petId}/avatar")
+    public String uploadAvatar(
+            @PathVariable Long petId,
+            @RequestParam("file") MultipartFile file
+    ) {
+        return petService.uploadAvatar(petId, file);
     }
 }
