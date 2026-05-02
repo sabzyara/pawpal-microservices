@@ -76,9 +76,9 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-//    if (user.getStatus() != UserStatus.ACTIVE) {
-//            throw new AccessDeniedException("Account is not approved");
-//        }
+        if (user.getStatus() != UserStatus.ACTIVE) {
+                throw new AccessDeniedException("Account is not approved");
+        }
 
         return jwtService.generateToken(user);
     }

@@ -59,8 +59,8 @@ public class PetOwnerService {
 
         AuthUser current = SecurityUtils.current();
 
-        if (current.role() != Role.OWNER) {
-            throw new AccessDeniedException("Only pet owners can update profile");
+        if (current.role() != Role.OWNER && current.role() != Role.ADMIN) {
+            throw new AccessDeniedException("Access denied");
         }
 
         Long userId = current.userId();

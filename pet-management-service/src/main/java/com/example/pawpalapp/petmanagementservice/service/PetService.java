@@ -75,8 +75,8 @@ public class PetService {
 
         AuthUser current = SecurityUtils.current();
 
-        if (current.role() != Role.OWNER) {
-            throw new AccessDeniedException("Only pet owners can see pet list");
+        if (current.role() != Role.OWNER && current.role() != Role.ADMIN) {
+            throw new AccessDeniedException("Access denied");
         }
 
         Long targetUserId = current.userId();
@@ -189,7 +189,8 @@ public class PetService {
                 .orElseThrow(() -> new RuntimeException("Owner not found"));
 
         // 🔐 проверка владельца
-        if (!pet.getOwnerId().equals(owner.getId())) {
+        if (current.role() != Role.ADMIN &&
+                !pet.getOwnerId().equals(owner.getId())) {
             throw new RuntimeException("Not your pet");
         }
 
@@ -217,7 +218,8 @@ public class PetService {
                 .findByUserId(current.userId())
                 .orElseThrow(() -> new RuntimeException("Owner not found"));
 
-        if (!pet.getOwnerId().equals(owner.getId())) {
+        if (current.role() != Role.ADMIN &&
+                !pet.getOwnerId().equals(owner.getId())) {
             throw new RuntimeException("Not your pet");
         }
 
