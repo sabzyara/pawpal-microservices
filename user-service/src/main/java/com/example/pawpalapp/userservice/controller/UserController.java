@@ -2,7 +2,9 @@ package com.example.pawpalapp.userservice.controller;
 
 import com.example.pawpalapp.userservice.dto.UserCreateDto;
 import com.example.pawpalapp.userservice.dto.UserResponseDto;
+import com.example.pawpalapp.userservice.model.enums.UserStatus;
 import com.example.pawpalapp.userservice.service.UserService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

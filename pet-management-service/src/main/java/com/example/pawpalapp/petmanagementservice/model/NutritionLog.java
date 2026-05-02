@@ -45,5 +45,4 @@ public class NutritionLog {
         return mealType + " with " + calories + " kcal";
     }
 
-
 }

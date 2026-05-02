@@ -14,7 +14,6 @@ public class JwtConfig {
     @Value("${jwt.secret}")
     private String secret;
 
-    // 🔥 ДЛЯ ГЕНЕРАЦИИ
     @Bean
     public JwtEncoder jwtEncoder() {
         return new NimbusJwtEncoder(
@@ -22,7 +21,6 @@ public class JwtConfig {
         );
     }
 
-    // 🔥 ДЛЯ ЧТЕНИЯ (ЭТО ТЕБЕ НЕ ХВАТАЛО)
     @Bean
     public JwtDecoder jwtDecoder() {
         SecretKeySpec secretKey = new SecretKeySpec(
