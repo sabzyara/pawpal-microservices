@@ -22,10 +22,6 @@ public class NutritionController {
         return service.create(dto);
     }
 
-    @GetMapping("/pet/{petId}")
-    public List<NutritionResponseDto> getByPet(@PathVariable Long petId) {
-        return service.getByPet(petId);
-    }
 
     @GetMapping("/pet/{petId}")
     public List<NutritionResponseDto> getByPet(
@@ -34,4 +30,6 @@ public class NutritionController {
     ) {
         return service.getByPetAndDate(petId, date);
     }
+
+
 }
