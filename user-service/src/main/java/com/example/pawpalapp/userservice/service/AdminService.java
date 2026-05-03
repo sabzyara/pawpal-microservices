@@ -37,9 +37,9 @@ public class AdminService {
 
     public List<PetDto> getPetsByUserId(Long userId) {
 
-//        String url = "https://pawpal-gateway.onrender.com/pet-management-service/api/pets/" + userId;
+        String url = "https://pawpal-gateway.onrender.com/pet-management-service/api/pets/" + userId;
 
-        String url = "http://localhost:8081/api/pets/" + userId;
+//        String url = "http://localhost:8081/api/pets/" + userId;
 
         Jwt jwt = (Jwt) SecurityContextHolder
                 .getContext()
@@ -94,8 +94,8 @@ public class AdminService {
 
         // профиль
         PetOwnerDto owner = restTemplate.exchange(
-                "http://localhost:8083/api/pet-owners/user/" + userId,
-             //   "https://pawpal-gateway.onrender.com/pet-management-service/api/pet-owners/profile" + userId;
+//                "http://localhost:8081/api/pet-owners/user/" + userId,
+                "https://pawpal-gateway.onrender.com/pet-management-service/api/pet-owners/user" + userId,
 
                 HttpMethod.GET,
                 entity,
@@ -104,7 +104,8 @@ public class AdminService {
 
         // питомцы
         PetDto[] pets = restTemplate.exchange(
-                "http://localhost:8083/api/pets/" + userId,
+//                "http://localhost:8081/api/pets/" + userId,
+                "https://pawpal-gateway.onrender.com/pet-management-service/api/pets/" + userId,
                 HttpMethod.GET,
                 entity,
                 PetDto[].class
@@ -132,8 +133,8 @@ public class AdminService {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         return restTemplate.exchange(
-                "http://localhost:8083/api/veterinarians/user/" + userId,
-                //   "https://pawpal-gateway.onrender.com/specialist-service/api/veterinarians/profile" + userId;
+//                "http://localhost:8083/api/veterinarians/user/" + userId,
+                   "https://pawpal-gateway.onrender.com/specialist-service/api/veterinarians/user" + userId,
 
                 HttpMethod.GET,
                 entity,
@@ -156,8 +157,8 @@ public class AdminService {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         return restTemplate.exchange(
-                "http://localhost:8083/api/service-providers/user/" + userId,
-                //   "https://pawpal-gateway.onrender.com/specialist-service/api/service-providers/profile" + userId;
+//                "http://localhost:8083/api/service-providers/user/" + userId,
+                   "https://pawpal-gateway.onrender.com/specialist-service/api/service-providers/user" + userId,
 
                 HttpMethod.GET,
                 entity,
