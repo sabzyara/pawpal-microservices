@@ -78,6 +78,18 @@ public class ServiceProviderService {
         return ServiceProviderMapper.toDto(serviceProvider);
     }
 
+    public ServiceProviderResponseDto getById(Long id) {
+        ServiceProvider sp = serviceProviderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("No service provider found"));
+        return ServiceProviderMapper.toDto(sp);
+    }
+
+    public ServiceProviderResponseDto getByUserId(Long userId) {
+        ServiceProvider sp = serviceProviderRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("No service provider found"));
+
+        return ServiceProviderMapper.toDto(sp);
+    }
 
     public ServiceProviderResponseDto update(ServiceProviderUpdateDto dto) {
 

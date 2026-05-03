@@ -86,6 +86,13 @@ public class VeterinarianService {
         return VetMapper.toDto(v);
     }
 
+    public VetResponseDto getByUserId(Long userId) {
+        Veterinarian v = veterinarianRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("No veterinarian found"));
+
+        return VetMapper.toDto(v);
+    }
+
     public VetResponseDto update(VetUpdateDto dto) {
 
         AuthUser current = SecurityUtils.current();

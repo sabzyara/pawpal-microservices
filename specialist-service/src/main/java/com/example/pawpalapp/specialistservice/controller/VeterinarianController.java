@@ -35,6 +35,16 @@ public class VeterinarianController {
         return ResponseEntity.ok(veterinarianService.getAll());
     }
 
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<VetResponseDto> getProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(veterinarianService.getById(id));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<VetResponseDto> getByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(veterinarianService.getByUserId(userId));
+    }
+
     // UPDATE VET BY AUTHENTICATED ID
     @PutMapping("/me")
     public ResponseEntity<VetResponseDto> update(@RequestBody VetUpdateDto dto) {

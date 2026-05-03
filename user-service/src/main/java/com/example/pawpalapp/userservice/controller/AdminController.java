@@ -2,8 +2,10 @@ package com.example.pawpalapp.userservice.controller;
 
 import com.example.pawpalapp.userservice.dto.PetDto;
 import com.example.pawpalapp.userservice.dto.UserResponseDto;
+import com.example.pawpalapp.userservice.model.User;
 import com.example.pawpalapp.userservice.model.enums.Role;
 import com.example.pawpalapp.userservice.model.enums.UserStatus;
+import com.example.pawpalapp.userservice.service.AdminService;
 import com.example.pawpalapp.userservice.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +16,11 @@ import java.util.List;
 @RequestMapping("/admin")
 public class AdminController {
 
+    private final AdminService adminService;
     private final UserService userService;
 
-    public AdminController(UserService userService) {
+    public AdminController(AdminService adminService, UserService userService) {
+        this.adminService = adminService;
         this.userService = userService;
     }
 
@@ -33,7 +37,7 @@ public class AdminController {
             @RequestParam(required = false) Role role
     ) {
         if (role != null) {
-            return userService.getByRole(role);
+            return adminService.getByRole(role);
         }
         return userService.getAll();
     }
@@ -59,6 +63,12 @@ public class AdminController {
     @GetMapping("/users/{id}/pets")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     public List<PetDto> getPetsByUserId(@PathVariable Long id) {
-        return userService.getPetsByUserId(id);
+        return adminService.getPetsByUserId(id);
+    }
+
+    @GetMapping("/users/{id}/profile")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public Object getUserProfile(@PathVariable Long id) {
+        return adminService.getFullProfile(id);
     }
 }
