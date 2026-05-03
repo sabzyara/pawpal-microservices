@@ -4,6 +4,7 @@ import com.example.pawpalapp.petmanagementservice.dto.activity.*;
 import com.example.pawpalapp.petmanagementservice.service.ActivityService;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -24,5 +25,13 @@ public class ActivityController {
     @GetMapping("/pet/{petId}")
     public List<ActivityResponseDto> getByPet(@PathVariable Long petId) {
         return service.getByPet(petId);
+    }
+
+    @GetMapping("/pet/{petId}")
+    public List<ActivityResponseDto> getByPet(
+            @PathVariable Long petId,
+            @RequestParam(required = false) LocalDate date
+    ) {
+        return service.getByPetAndDate(petId, date);
     }
 }

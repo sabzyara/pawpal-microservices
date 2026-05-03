@@ -6,6 +6,7 @@ import com.example.pawpalapp.petmanagementservice.model.NutritionLog;
 import com.example.pawpalapp.petmanagementservice.repository.NutritionLogRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,5 +31,18 @@ public class NutritionService {
                 .stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
+    }
+    public List<NutritionResponseDto> getByPetAndDate(Long petId, LocalDate date) {
+        if (date != null) {
+            return repository.findByPetIdAndDate(petId, date)
+                    .stream()
+                    .map(mapper::toDto)
+                    .toList();
+        }
+
+        return repository.findByPetId(petId)
+                .stream()
+                .map(mapper::toDto)
+                .toList();
     }
 }
