@@ -54,6 +54,5 @@ public class UserController {
         Long userId = jwt.getClaim("userId");
 
         userService.deleteById(userId);
-
     }
 }

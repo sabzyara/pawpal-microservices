@@ -116,40 +116,4 @@ public class UserService {
         user.setStatus(status);
     }
 
-    // GET USERS BY ROLE
-    public List<UserResponseDto> getByRole(Role role) {
-        return userRepository.findByRole(role)
-                .stream()
-                .map(UserMapper::toDto)
-                .toList();
-    }
-
-    public List<PetDto> getPetsByUserId(Long userId) {
-
-//        String url = "https://pawpal-gateway.onrender.com/pet-management-service/api/pets/" + userId;
-
-        String url = "http://localhost:8081/api/pets/" + userId;
-
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
-
-        String token = jwt.getTokenValue();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<PetDto[]> response =
-                restTemplate.exchange(
-                        url,
-                        HttpMethod.GET,
-                        entity,
-                        PetDto[].class
-                );
-
-        return Arrays.asList(response.getBody());
-    }
 }

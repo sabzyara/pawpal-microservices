@@ -37,6 +37,16 @@ public class ServiceProviderController {
         return ResponseEntity.ok(serviceProviderService.getAll());
     }
 
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<ServiceProviderResponseDto> getProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(serviceProviderService.getById(id));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ServiceProviderResponseDto> getByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(serviceProviderService.getByUserId(userId));
+    }
+
     // UPDATE SERVICE PROVIDER OF AUTHENTICATED
     @PutMapping("/me")
     public ResponseEntity<ServiceProviderResponseDto> update(

@@ -139,4 +139,17 @@ public class PetOwnerService {
 
         return url;
     }
+
+    public PetOwnerResponseDto getById(Long id) {
+        PetOwner po = petOwnerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("No pet owner found"));
+        return PetOwnerMapper.toDto(po);
+    }
+
+    public PetOwnerResponseDto getByUserId(Long userId) {
+        PetOwner po = petOwnerRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("No pet owner found"));
+
+        return PetOwnerMapper.toDto(po);
+    }
 }
