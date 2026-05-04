@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -25,9 +26,29 @@ public class AdminService {
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
 
+    // TOKEN
+    private HttpEntity<Void> createEntityWithToken() {
+        try {
+            Jwt jwt = (Jwt) SecurityContextHolder
+                    .getContext()
+                    .getAuthentication()
+                    .getPrincipal();
 
+            String token = jwt.getTokenValue();
 
-    // GET USERS BY ROLE
+            System.out.println("TOKEN: " + token);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
+
+            return new HttpEntity<>(headers);
+
+        } catch (Exception e) {
+            throw new RuntimeException("❌ TOKEN ERROR: " + e.getMessage(), e);
+        }
+    }
+
+    // USERS
     public List<UserResponseDto> getByRole(Role role) {
         return userRepository.findByRole(role)
                 .stream()
@@ -35,42 +56,43 @@ public class AdminService {
                 .toList();
     }
 
+    // PETS
     public List<PetDto> getPetsByUserId(Long userId) {
 
         String url = "https://pawpal-gateway.onrender.com/pet-management/api/pets/" + userId;
+        HttpEntity<Void> entity = createEntityWithToken();
 
-//        String url = "http://localhost:8081/api/pets/" + userId;
+        try {
+            System.out.println("CALL: " + url);
 
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+            ResponseEntity<PetDto[]> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    PetDto[].class
+            );
 
-        String token = jwt.getTokenValue();
+            return response.getBody() != null
+                    ? Arrays.asList(response.getBody())
+                    : List.of();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
+        } catch (HttpClientErrorException e) {
+            System.out.println("❌ PETS CLIENT ERROR: " + e.getStatusCode());
+            System.out.println(e.getResponseBodyAsString());
+            throw e;
 
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<PetDto[]> response =
-                restTemplate.exchange(
-                        url,
-                        HttpMethod.GET,
-                        entity,
-                        PetDto[].class
-                );
-
-        return Arrays.asList(response.getBody());
+        } catch (Exception e) {
+            throw new RuntimeException("❌ PETS ERROR: " + e.getMessage(), e);
+        }
     }
 
+    // FULL PROFILE
     public Object getFullProfile(Long userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return switch (user.getRole()) {
-
             case OWNER -> getOwnerProfile(userId);
             case VET -> getVetProfile(userId);
             case SERVICE -> getServiceProfile(userId);
@@ -78,91 +100,103 @@ public class AdminService {
         };
     }
 
+    // OWNER
     public OwnerFullDto getOwnerProfile(Long userId) {
 
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+        HttpEntity<Void> entity = createEntityWithToken();
 
-        String token = jwt.getTokenValue();
+        String ownerUrl = "https://pawpal-gateway.onrender.com/pet-management/api/pet-owners/user/" + userId;
+        String petsUrl = "https://pawpal-gateway.onrender.com/pet-management/api/pets/" + userId;
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
+        PetOwnerDto owner = null;
+        List<PetDto> petList = List.of();
 
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        try {
+            System.out.println("CALL OWNER: " + ownerUrl);
 
-        // профиль
-        PetOwnerDto owner = restTemplate.exchange(
-//                "http://localhost:8081/api/pet-owners/user/" + userId,
-                "https://pawpal-gateway.onrender.com/pet-management/api/pet-owners/user/" + userId,
+            ResponseEntity<PetOwnerDto> ownerResponse =
+                    restTemplate.exchange(ownerUrl, HttpMethod.GET, entity, PetOwnerDto.class);
 
-                HttpMethod.GET,
-                entity,
-                PetOwnerDto.class
-        ).getBody();
+            owner = ownerResponse.getBody();
 
-        // питомцы
-        PetDto[] pets = restTemplate.exchange(
-//                "http://localhost:8081/api/pets/" + userId,
-                "https://pawpal-gateway.onrender.com/pet-management/api/pets/" + userId,
-                HttpMethod.GET,
-                entity,
-                PetDto[].class
-        ).getBody();
+        } catch (HttpClientErrorException e) {
+            System.out.println("❌ OWNER ERROR: " + e.getStatusCode());
+            System.out.println(e.getResponseBodyAsString());
+        }
+
+        try {
+            System.out.println("CALL PETS: " + petsUrl);
+
+            ResponseEntity<PetDto[]> petsResponse =
+                    restTemplate.exchange(petsUrl, HttpMethod.GET, entity, PetDto[].class);
+
+            PetDto[] pets = petsResponse.getBody();
+            petList = pets != null ? Arrays.asList(pets) : List.of();
+
+        } catch (HttpClientErrorException e) {
+            System.out.println("❌ PETS ERROR: " + e.getStatusCode());
+            System.out.println(e.getResponseBodyAsString());
+        }
 
         System.out.println("OWNER: " + owner);
-        System.out.println("PETS: " + Arrays.toString(pets));
+        System.out.println("PETS: " + petList);
 
-        List<PetDto> petList = pets != null ? Arrays.asList(pets) : List.of();
         return new OwnerFullDto(owner, petList);
     }
 
+    // VET
     public VetDto getVetProfile(Long userId) {
 
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+        String url = "https://pawpal-gateway.onrender.com/specialist-service/api/veterinarians/user/" + userId;
+        HttpEntity<Void> entity = createEntityWithToken();
 
-        String token = jwt.getTokenValue();
+        try {
+            System.out.println("CALL VET: " + url);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
+            ResponseEntity<VetDto> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    VetDto.class
+            );
 
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+            return response.getBody();
 
-        return restTemplate.exchange(
-//                "http://localhost:8083/api/veterinarians/user/" + userId,
-                   "https://pawpal-gateway.onrender.com/specialist-service/api/veterinarians/user/" + userId,
+        } catch (HttpClientErrorException e) {
+            System.out.println("❌ VET ERROR: " + e.getStatusCode());
+            System.out.println(e.getResponseBodyAsString());
+            throw e;
 
-                HttpMethod.GET,
-                entity,
-                VetDto.class
-        ).getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("❌ VET ERROR: " + e.getMessage(), e);
+        }
     }
 
+    // SERVICE
     public ServiceProviderDto getServiceProfile(Long userId) {
 
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+        String url = "https://pawpal-gateway.onrender.com/specialist-service/api/service-providers/user/" + userId;
+        HttpEntity<Void> entity = createEntityWithToken();
 
-        String token = jwt.getTokenValue();
+        try {
+            System.out.println("CALL SERVICE: " + url);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
+            ResponseEntity<ServiceProviderDto> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    ServiceProviderDto.class
+            );
 
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+            return response.getBody();
 
-        return restTemplate.exchange(
-//                "http://localhost:8083/api/service-providers/user/" + userId,
-                   "https://pawpal-gateway.onrender.com/specialist-service/api/service-providers/user/" + userId,
+        } catch (HttpClientErrorException e) {
+            System.out.println("❌ SERVICE ERROR: " + e.getStatusCode());
+            System.out.println(e.getResponseBodyAsString());
+            throw e;
 
-                HttpMethod.GET,
-                entity,
-                ServiceProviderDto.class
-        ).getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("❌ SERVICE ERROR: " + e.getMessage(), e);
+        }
     }
 }
