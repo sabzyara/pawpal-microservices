@@ -2,6 +2,7 @@ package com.example.pawpalapp.petmanagementservice.mapper;
 
 import com.example.pawpalapp.petmanagementservice.dto.pet.*;
 import com.example.pawpalapp.petmanagementservice.model.Pet;
+import com.example.pawpalapp.petmanagementservice.model.PetSpecies;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,7 +12,7 @@ public class PetMapper {
         return Pet.builder()
                 .ownerId(dto.getOwnerId())
                 .name(dto.getName())
-                .species(dto.getSpecies())
+                .species(PetSpecies.valueOf(dto.getSpecies().toUpperCase()))
                 .breed(dto.getBreed())
                 .gender(dto.getGender())
                 .age(dto.getAge())
@@ -24,7 +25,7 @@ public class PetMapper {
         return PetResponseDto.builder()
                 .id(pet.getId())
                 .name(pet.getName())
-                .species(pet.getSpecies())
+                .species(pet.getSpecies().name())
                 .breed(pet.getBreed())
                 .gender(pet.getGender())
                 .age(pet.getAge())

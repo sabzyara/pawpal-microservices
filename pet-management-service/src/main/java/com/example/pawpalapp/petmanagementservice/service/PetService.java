@@ -2,10 +2,7 @@ package com.example.pawpalapp.petmanagementservice.service;
 
 import com.example.pawpalapp.petmanagementservice.dto.pet.*;
 import com.example.pawpalapp.petmanagementservice.mapper.PetMapper;
-import com.example.pawpalapp.petmanagementservice.model.ActivityLog;
-import com.example.pawpalapp.petmanagementservice.model.NutritionLog;
-import com.example.pawpalapp.petmanagementservice.model.Pet;
-import com.example.pawpalapp.petmanagementservice.model.PetOwner;
+import com.example.pawpalapp.petmanagementservice.model.*;
 import com.example.pawpalapp.petmanagementservice.repository.ActivityLogRepository;
 import com.example.pawpalapp.petmanagementservice.repository.NutritionLogRepository;
 import com.example.pawpalapp.petmanagementservice.repository.PetOwnerRepository;
@@ -63,7 +60,7 @@ public class PetService {
         pet.setAge(dto.getAge());
         pet.setBreed(dto.getBreed());
         pet.setGender(dto.getGender());
-        pet.setSpecies(dto.getSpecies());
+        pet.setSpecies(PetSpecies.valueOf(dto.getSpecies().toUpperCase()));
         pet.setWeight(dto.getWeight());
         pet.setHealthStatus(dto.getHealthStatus());
 
@@ -195,7 +192,7 @@ public class PetService {
         }
 
         pet.setName(dto.getName());
-        pet.setSpecies(dto.getSpecies());
+        pet.setSpecies(PetSpecies.valueOf(dto.getSpecies().toUpperCase()));
         pet.setBreed(dto.getBreed());
         pet.setGender(dto.getGender());
         pet.setAge(dto.getAge());
