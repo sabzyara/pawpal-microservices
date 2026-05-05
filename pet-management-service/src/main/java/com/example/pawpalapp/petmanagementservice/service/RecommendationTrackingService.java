@@ -49,7 +49,7 @@ public class RecommendationTrackingService {
         // 4️⃣ формируем запрос в AI
         RecommendationRequestDto request =
                 RecommendationRequestDto.builder()
-                        .species(pet.getSpecies())
+                        .species(pet.getSpecies().name())
                         .weight(pet.getWeight())
                         .age(pet.getAge())
                         .totalActivityMinutes(totalActivityMinutes)
