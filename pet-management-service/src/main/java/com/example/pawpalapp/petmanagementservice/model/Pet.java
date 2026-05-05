@@ -31,7 +31,8 @@ public class  Pet {
     @Column(nullable = false)
     private String name;
 
-    private String species;
+    @Enumerated(EnumType.STRING)
+    private PetSpecies species;
 
     private String breed;
 
