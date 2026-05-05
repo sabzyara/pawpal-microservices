@@ -21,6 +21,7 @@ public class ActivityMapper {
         return ActivityResponseDto.builder()
                 .activityId(log.getActivityId())
                 .summary(log.generateActivitySummary())
+                .date(log.getDate())
                 .build();
     }
 }

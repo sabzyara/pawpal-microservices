@@ -21,6 +21,7 @@ public class NutritionMapper {
         return NutritionResponseDto.builder()
                 .logId(log.getLogId())
                 .summary(log.generateNutritionSummary())
+                .date(log.getDate())
                 .build();
     }
 }
