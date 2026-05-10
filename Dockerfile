@@ -4,6 +4,6 @@ WORKDIR /app
 COPY . .
 
 RUN chmod +x gradlew
-RUN ./gradlew :pet-management-service:build -x test
+RUN ./gradlew :ai-analytics-service:build -x test
 
-CMD ["java", "-jar", "pet-management-service/build/libs/pet-management-service-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "ai-analytics-service/build/libs/ai-analytics-service-0.0.1-SNAPSHOT.jar"]
