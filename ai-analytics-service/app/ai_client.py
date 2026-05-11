@@ -41,7 +41,7 @@ def ask_ai(question: str, pet_id: str, token: str):
         """
 
         response = client.models.generate_content(
-            model="gemini-1.5-flash-8b-latest",
+            model="gemini-2.5-flash",
             contents=prompt
         )
 
