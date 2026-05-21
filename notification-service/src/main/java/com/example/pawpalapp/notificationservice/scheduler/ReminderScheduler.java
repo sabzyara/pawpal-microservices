@@ -26,12 +26,15 @@ public class ReminderScheduler {
                 service.getPending(LocalDateTime.now());
 
         for (Notification n : due) {
+
             System.out.println(
                     "REMINDER → user " + n.getUserId()
                             + ": " + n.getTitle()
             );
 
-            service.markAsRead(n);
+            service.markAsDelivered(n);
         }
     }
+
+
 }

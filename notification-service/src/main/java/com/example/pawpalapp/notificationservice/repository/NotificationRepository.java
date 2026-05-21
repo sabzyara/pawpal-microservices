@@ -11,7 +11,10 @@ public interface NotificationRepository
 
     List<Notification> findByUserId(Long userId);
 
-    List<Notification> findByScheduledAtBeforeAndReadFalse(
-            LocalDateTime time
+    List<Notification>
+    findByScheduledAtBeforeAndDeliveredFalse(
+            LocalDateTime now
     );
+
+    List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

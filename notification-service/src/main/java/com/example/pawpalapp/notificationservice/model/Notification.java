@@ -36,4 +36,6 @@ public class Notification {
     private LocalDateTime scheduledAt;   // ⏰ когда показать
 
     private LocalDateTime createdAt;
+
+    private boolean delivered;
 }

@@ -2,7 +2,8 @@ from google import genai
 import os
 from dotenv import load_dotenv
 from app.pet_client import get_pet_data
-
+from app.notification_client \
+    import send_smart_notification
 load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
@@ -45,7 +46,17 @@ def ask_ai(question: str, pet_id: str, token: str):
             contents=prompt
         )
 
-        return {"response": response.text}
+        ai_text = response.text
+
+        send_smart_notification(
+            user_id=pet_data["pet"]["ownerId"],
+            title="AI Recommendation",
+            message=ai_text
+        )
+
+        return {
+            "response": ai_text
+        }
 
     except Exception as e:
         return {"error": str(e)}

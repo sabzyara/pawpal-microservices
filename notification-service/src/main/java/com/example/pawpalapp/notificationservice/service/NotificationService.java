@@ -18,6 +18,7 @@ public class NotificationService {
     }
 
     public void schedule(ReminderRequestDto dto) {
+
         Notification notification = Notification.builder()
                 .userId(dto.getUserId())
                 .type(dto.getType())
@@ -25,6 +26,7 @@ public class NotificationService {
                 .message(dto.getMessage())
                 .scheduledAt(dto.getScheduledAt())
                 .read(false)
+                .delivered(false)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -33,11 +35,26 @@ public class NotificationService {
 
     public List<Notification> getPending(LocalDateTime now) {
         return repository
-                .findByScheduledAtBeforeAndReadFalse(now);
+                .findByScheduledAtBeforeAndDeliveredFalse(now);
     }
 
-    public void markAsRead(Notification notification) {
+    public void markAsRead(Long id) {
+        Notification notification =
+                repository.findById(id).orElseThrow();
+
         notification.setRead(true);
+
+        repository.save(notification);
+    }
+
+    public List<Notification> getUserNotifications(Long userId) {
+        return repository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    public void markAsDelivered(Notification notification) {
+
+        notification.setDelivered(true);
+
         repository.save(notification);
     }
 }
