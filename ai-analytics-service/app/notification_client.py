@@ -13,7 +13,7 @@ def send_smart_notification(
 
     payload = {
         "userId": user_id,
-        "type": "SMART_RECOMMENDATION",
+        "type": "AI_RECOMMENDATION",
         "title": title,
         "message": message,
         "scheduledAt": datetime.now().isoformat()

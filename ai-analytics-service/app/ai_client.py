@@ -11,6 +11,7 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 def ask_ai(question: str, pet_id: str, token: str):
     try:
         pet_data = get_pet_data(pet_id, token)
+        print(pet_data)
 
         if "error" in pet_data:
             return {"error": "Cannot get pet data"}
