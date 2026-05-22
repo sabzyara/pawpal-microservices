@@ -16,7 +16,10 @@ def send_smart_notification(
         "type": "AI_RECOMMENDATION",
         "title": title,
         "message": message,
-        "scheduledAt": datetime.now().isoformat()
+        "scheduledAt":
+            datetime.now().strftime(
+                "%Y-%m-%dT%H:%M:%S"
+            )
     }
 
     try:

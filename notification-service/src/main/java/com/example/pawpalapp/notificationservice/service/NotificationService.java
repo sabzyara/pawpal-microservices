@@ -38,10 +38,14 @@ public class NotificationService {
             repository.save(notification);
 
             System.out.println(
-                    "SAVED SUCCESS"
+                    "NOTIFICATION SAVED"
             );
 
         } catch (Exception e) {
+
+            System.out.println(
+                    "SAVE ERROR"
+            );
 
             e.printStackTrace();
         }
