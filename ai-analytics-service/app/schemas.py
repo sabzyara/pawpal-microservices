@@ -19,3 +19,4 @@ class ChatRequest(BaseModel):
     message: str
     petId: str
     token: str
+    userId: int

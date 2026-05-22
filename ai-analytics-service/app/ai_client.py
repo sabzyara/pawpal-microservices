@@ -8,7 +8,10 @@ load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-def ask_ai(question: str, pet_id: str, token: str):
+def ask_ai(question: str,
+           pet_id: str,
+           token: str,
+           user_id: int):
     try:
         pet_data = get_pet_data(pet_id, token)
         print(pet_data)
@@ -50,7 +53,7 @@ def ask_ai(question: str, pet_id: str, token: str):
         ai_text = response.text
 
         send_smart_notification(
-            user_id=pet_data["pet"]["ownerId"],
+            user_id=user_id,
             title="AI Recommendation",
             message=ai_text
         )
