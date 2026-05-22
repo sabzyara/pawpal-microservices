@@ -18,7 +18,12 @@ public class ReminderController {
     }
 
     @PostMapping
-    public void createReminder(@RequestBody ReminderRequestDto dto) {
+    public void createReminder(
+            @RequestBody ReminderRequestDto dto
+    ) {
+
+        System.out.println(dto);
+
         service.schedule(dto);
     }
 

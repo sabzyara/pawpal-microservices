@@ -17,20 +17,34 @@ public class NotificationService {
         this.repository = repository;
     }
 
-    public void schedule(ReminderRequestDto dto) {
+    public void schedule(
+            ReminderRequestDto dto
+    ) {
 
-        Notification notification = Notification.builder()
-                .userId(dto.getUserId())
-                .type(dto.getType())
-                .title(dto.getTitle())
-                .message(dto.getMessage())
-                .scheduledAt(dto.getScheduledAt())
-                .read(false)
-                .delivered(false)
-                .createdAt(LocalDateTime.now())
-                .build();
+        try {
 
-        repository.save(notification);
+            Notification notification =
+                    Notification.builder()
+                            .userId(dto.getUserId())
+                            .type(dto.getType())
+                            .title(dto.getTitle())
+                            .message(dto.getMessage())
+                            .scheduledAt(dto.getScheduledAt())
+                            .read(false)
+                            .delivered(false)
+                            .createdAt(LocalDateTime.now())
+                            .build();
+
+            repository.save(notification);
+
+            System.out.println(
+                    "SAVED SUCCESS"
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
     }
 
     public List<Notification> getPending(LocalDateTime now) {
