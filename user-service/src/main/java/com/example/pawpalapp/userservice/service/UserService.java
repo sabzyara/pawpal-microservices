@@ -72,9 +72,9 @@ public class UserService {
                     entity,
                     Void.class
             );
-            System.out.println("✅ PET OK");
+            System.out.println("PET OK");
         } catch (Exception e) {
-            System.out.println("❌ PET ERROR: " + e.getMessage());
+            System.out.println("PET ERROR: " + e.getMessage());
         }
 
         try {
@@ -84,9 +84,9 @@ public class UserService {
                     entity,
                     Void.class
             );
-            System.out.println("✅ VET OK");
+            System.out.println("VET OK");
         } catch (Exception e) {
-            System.out.println("❌ VET ERROR: " + e.getMessage());
+            System.out.println("VET ERROR: " + e.getMessage());
         }
 
         try {
@@ -96,9 +96,9 @@ public class UserService {
                     entity,
                     Void.class
             );
-            System.out.println("✅ SERVICE OK");
+            System.out.println("SERVICE OK");
         } catch (Exception e) {
-            System.out.println("❌ SERVICE ERROR: " + e.getMessage());
+            System.out.println("SERVICE ERROR: " + e.getMessage());
         }
 
         userRepository.deleteById(userId);

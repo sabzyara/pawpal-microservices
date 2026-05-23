@@ -43,7 +43,9 @@ public class  Pet {
     private int weight;
 
     private String healthStatus;
+
     private String avatarUrl;
+
 
     
 }
