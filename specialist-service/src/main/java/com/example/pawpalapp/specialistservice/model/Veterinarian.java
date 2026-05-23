@@ -16,7 +16,7 @@ public class Veterinarian {
 
     @Id
     @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="vet_seq_gen")
-    @SequenceGenerator(allocationSize=1, schema="public",  name="vet_seq_gen", sequenceName = "vetSequence")
+    @SequenceGenerator(allocationSize=1, name="vet_seq_gen", sequenceName = "vetSequence")
     private Long vetId;
 
     @Column(nullable = false, unique = true)
@@ -34,8 +34,21 @@ public class Veterinarian {
 
     private String clinicName;
 
-    private int experienceYears;
+    private Integer experienceYears;
 
     private String avatarUrl;
+
+    private Integer patientsCount;
+
+    private String about;
+
+    private String education;
+
+    private Double pricePerVisit;
+
+    private Double rating;
+
+    private String address;
+    private String city;
 
 }

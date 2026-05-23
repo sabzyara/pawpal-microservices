@@ -3,8 +3,6 @@ package com.example.pawpalapp.specialistservice.controller;
 import com.example.pawpalapp.specialistservice.dto.ServiceProviderCreateDto;
 import com.example.pawpalapp.specialistservice.dto.ServiceProviderResponseDto;
 import com.example.pawpalapp.specialistservice.dto.ServiceProviderUpdateDto;
-import com.example.pawpalapp.specialistservice.dto.VetCreateDto;
-import com.example.pawpalapp.specialistservice.repository.VeterinarianRepository;
 import com.example.pawpalapp.specialistservice.service.ServiceProviderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,16 +12,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/service-providers")
+@RequestMapping("/service-providers")
 @RequiredArgsConstructor
 public class ServiceProviderController {
 
     private final ServiceProviderService serviceProviderService;
 
-    // CREATE SERVICE PROVIDER OF AUTHENTICATED USER ID
     @PostMapping("/me")
-    public void createMyProfile(@RequestBody ServiceProviderCreateDto request) {
-        serviceProviderService.createMyProfile(request);
+    public ServiceProviderResponseDto createMyProfile(@RequestBody ServiceProviderCreateDto request) {
+        return serviceProviderService.createMyProfile(request);
     }
 
     @GetMapping("/me")
@@ -31,14 +28,14 @@ public class ServiceProviderController {
         return serviceProviderService.getMyProfile();
     }
 
-    // GET ALL SERVICE PROVIDERS
     @GetMapping
     public ResponseEntity<List<ServiceProviderResponseDto>> getAll() {
         return ResponseEntity.ok(serviceProviderService.getAll());
     }
 
-    @GetMapping("/profile/{id}")
-    public ResponseEntity<ServiceProviderResponseDto> getProfile(@PathVariable Long id) {
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ServiceProviderResponseDto> getById(@PathVariable Long id) {
         return ResponseEntity.ok(serviceProviderService.getById(id));
     }
 
@@ -47,17 +44,14 @@ public class ServiceProviderController {
         return ResponseEntity.ok(serviceProviderService.getByUserId(userId));
     }
 
-    // UPDATE SERVICE PROVIDER OF AUTHENTICATED
     @PutMapping("/me")
-    public ResponseEntity<ServiceProviderResponseDto> update(
-            @RequestBody ServiceProviderUpdateDto dto) {
-        return ResponseEntity.ok(serviceProviderService.update(dto));
+    public ResponseEntity<ServiceProviderResponseDto> update(@RequestBody ServiceProviderUpdateDto dto) {
+        return ResponseEntity.ok(serviceProviderService.updateMyProfile(dto));
     }
 
-    //DELETE SERVICE PROVIDER
-    @DeleteMapping("/user/{userId}")
-    public void deleteByUserId(@PathVariable Long userId) {
-        serviceProviderService.deleteByUserId(userId);
+    @DeleteMapping("/me")
+    public void deleteMyProfile() {
+        serviceProviderService.deleteMyProfile();
     }
 
     @PostMapping("/me/avatar")
@@ -65,5 +59,3 @@ public class ServiceProviderController {
         return serviceProviderService.uploadAvatar(file);
     }
 }
-
-

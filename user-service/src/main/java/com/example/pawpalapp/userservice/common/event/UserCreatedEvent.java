@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserCreatedEvent {
     private Long userId;
-    private String role; // PET_OWNER, SPECIALIST
+    private String role;
 }

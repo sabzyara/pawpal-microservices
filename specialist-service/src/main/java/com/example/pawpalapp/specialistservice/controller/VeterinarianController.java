@@ -1,10 +1,8 @@
 package com.example.pawpalapp.specialistservice.controller;
 
 import com.example.pawpalapp.specialistservice.dto.*;
-import com.example.pawpalapp.specialistservice.service.ServiceProviderService;
 import com.example.pawpalapp.specialistservice.service.VeterinarianService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,13 +10,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/veterinarians")
+@RequestMapping("/veterinarians")
 @RequiredArgsConstructor
 public class VeterinarianController {
 
     private final VeterinarianService veterinarianService;
 
-    // CREATE VET OF AUTHENTICATED USER ID
     @PostMapping("/me")
     public void createMyProfile(@RequestBody VetCreateDto request) {
         veterinarianService.createMyProfile(request);
@@ -29,7 +26,6 @@ public class VeterinarianController {
         return veterinarianService.getMyProfile();
     }
 
-    // GET ALL VETS
     @GetMapping
     public ResponseEntity<List<VetResponseDto>> getAll() {
         return ResponseEntity.ok(veterinarianService.getAll());
@@ -45,17 +41,14 @@ public class VeterinarianController {
         return ResponseEntity.ok(veterinarianService.getByUserId(userId));
     }
 
-    // UPDATE VET BY AUTHENTICATED ID
     @PutMapping("/me")
     public ResponseEntity<VetResponseDto> update(@RequestBody VetUpdateDto dto) {
-
         return ResponseEntity.ok(veterinarianService.update(dto));
     }
 
-    // DELETE VET
-    @DeleteMapping("/user/{userId}")
-    public void deleteByUserId(@PathVariable Long userId) {
-        veterinarianService.deleteByUserId(userId);
+    @DeleteMapping("/me")
+    public void deleteMyProfile() {
+        veterinarianService.deleteMyProfile();
     }
 
     @PostMapping("/me/avatar")

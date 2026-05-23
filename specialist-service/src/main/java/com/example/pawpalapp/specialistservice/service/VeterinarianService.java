@@ -1,6 +1,5 @@
 package com.example.pawpalapp.specialistservice.service;
 
-
 import com.example.pawpalapp.common.storage.FileStorageService;
 import com.example.pawpalapp.security.AuthUser;
 import com.example.pawpalapp.security.Role;
@@ -9,14 +8,11 @@ import com.example.pawpalapp.specialistservice.dto.VetCreateDto;
 import com.example.pawpalapp.specialistservice.dto.VetResponseDto;
 import com.example.pawpalapp.specialistservice.dto.VetUpdateDto;
 import com.example.pawpalapp.specialistservice.mapper.VetMapper;
-import com.example.pawpalapp.specialistservice.model.ServiceProvider;
 import com.example.pawpalapp.specialistservice.model.Veterinarian;
 import com.example.pawpalapp.specialistservice.repository.VeterinarianRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -30,31 +26,21 @@ public class VeterinarianService {
     private final VeterinarianRepository veterinarianRepository;
     private final FileStorageService fileStorageService;
 
+    @Transactional
     public void createMyProfile(VetCreateDto request) {
+        AuthUser current = SecurityUtils.current();
 
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
-
-        Long userId = jwt.getClaim("userId");
-        String role = jwt.getClaim("role");
-
-        if (!"VET".equals(role)) {
-            throw new AccessDeniedException("Only VET can create profile");
+        if (current.role() != Role.VET) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only VET can update vet profile");
         }
 
-        if (veterinarianRepository.existsByUserId(userId)) {
-            throw new RuntimeException("Profile already exists");
+        if (veterinarianRepository.existsByUserId(current.userId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Profile already exists");
         }
 
-        Veterinarian vet = new Veterinarian();
-        vet.setUserId(userId);
-        vet.setFirstName(request.getFirstName());
-        vet.setLastName(request.getLastName());
-        vet.setPhoneNumber(request.getPhoneNumber());
-        vet.setLicenseNumber(request.getLicenseNumber());
-        vet.setExperienceYears(request.getExperienceYears());
-        vet.setClinicName(request.getClinicName());
+        Veterinarian vet = VetMapper.toEntity(request);
+        vet.setUserId(current.userId());
+
         veterinarianRepository.save(vet);
     }
 
@@ -66,10 +52,7 @@ public class VeterinarianService {
     }
 
     public VetResponseDto getMyProfile() {
-
-        AuthUser current = SecurityUtils.current();
-
-        Long userId = current.userId();
+        Long userId = SecurityUtils.getUserId();
 
         Veterinarian vet = veterinarianRepository
                 .findByUserId(userId)
@@ -82,55 +65,59 @@ public class VeterinarianService {
 
     public VetResponseDto getById(Long id) {
         Veterinarian v = veterinarianRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No veterinarian found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No veterinarian found"));
         return VetMapper.toDto(v);
     }
 
     public VetResponseDto getByUserId(Long userId) {
         Veterinarian v = veterinarianRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("No veterinarian found"));
-
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No veterinarian found"));
         return VetMapper.toDto(v);
     }
 
+    @Transactional
     public VetResponseDto update(VetUpdateDto dto) {
-
         AuthUser current = SecurityUtils.current();
 
-        // RBAC
         if (current.role() != Role.VET) {
-            throw new AccessDeniedException("Only vets can update vet profile");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only vets can update vet profile");
         }
 
-        Long targetUserId = current.userId();
-
         Veterinarian veterinarian = veterinarianRepository
-                .findByUserId(targetUserId)
-                .orElseThrow(() -> new RuntimeException("Veterinarian profile not found"));
+                .findByUserId(current.userId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinarian profile not found"));
 
         VetMapper.updateEntity(veterinarian, dto);
-
         Veterinarian saved = veterinarianRepository.save(veterinarian);
 
         return VetMapper.toDto(saved);
     }
 
+    @Transactional
+    public void deleteMyProfile() {
+        Long userId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getRole();
 
-    public void deleteByUserId(Long userId) {
+        if (role == null || !role.equals("VET")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only vets can delete profile");
+        }
+
+        if (!veterinarianRepository.existsByUserId(userId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found");
+        }
+
         veterinarianRepository.deleteByUserId(userId);
-
     }
 
+    @Transactional
     public String uploadAvatar(MultipartFile file) {
-
-        AuthUser current = SecurityUtils.current();
+        Long userId = SecurityUtils.getUserId();
 
         Veterinarian vet = veterinarianRepository
-                .findByUserId(current.userId())
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .findByUserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found"));
 
         String url = fileStorageService.upload(file);
-
         vet.setAvatarUrl(url);
         veterinarianRepository.save(vet);
 

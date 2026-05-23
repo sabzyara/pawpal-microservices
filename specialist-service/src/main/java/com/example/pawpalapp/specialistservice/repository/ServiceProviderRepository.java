@@ -15,7 +15,6 @@ public interface ServiceProviderRepository extends JpaRepository<ServiceProvider
 
     boolean existsByUserId(Long userId);
 
-
     @Transactional
     @Modifying
     @Query("DELETE FROM ServiceProvider s WHERE s.userId = :userId")
