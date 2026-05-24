@@ -14,5 +14,12 @@ public class ServiceProviderUpdateDto {
     private String lastName;
     private String phoneNumber;
     private String serviceCategory;
+    private Integer experienceYears;
+    private String education;
+    private String avatarUrl;
+    private String address;
+    private String city;
+    private Double pricePerVisit;
+    private String about;
 }
 

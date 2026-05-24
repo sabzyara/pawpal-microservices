@@ -6,133 +6,141 @@ import com.example.pawpalapp.security.Role;
 import com.example.pawpalapp.security.SecurityUtils;
 import com.example.pawpalapp.specialistservice.dto.*;
 import com.example.pawpalapp.specialistservice.mapper.ServiceProviderMapper;
-import com.example.pawpalapp.specialistservice.mapper.VetMapper;
 import com.example.pawpalapp.specialistservice.model.ServiceProvider;
-import com.example.pawpalapp.specialistservice.model.Veterinarian;
 import com.example.pawpalapp.specialistservice.repository.ServiceProviderRepository;
-import com.example.pawpalapp.specialistservice.repository.VeterinarianRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
-
 @Service
+@Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ServiceProviderService {
 
     private final ServiceProviderRepository serviceProviderRepository;
     private final FileStorageService fileStorageService;
+    private final ServiceProviderMapper serviceProviderMapper;
 
-    public void createMyProfile(ServiceProviderCreateDto request) {
+    @Transactional
+    public ServiceProviderResponseDto createMyProfile(ServiceProviderCreateDto request) {
+        AuthUser current = SecurityUtils.current();
 
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
-
-        Long userId = jwt.getClaim("userId");
-        String role = jwt.getClaim("role");
-
-        if (!"SERVICE".equals(role)) {
-            throw new AccessDeniedException("Only SERVICE PROVIDER can create profile");
+        if (current.role() != Role.SERVICE) {
+            log.warn("User {} with role {} tried to create service provider profile",
+                    current.userId(), current.role());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only SERVICE PROVIDER can create profile");
         }
 
-        if (serviceProviderRepository.existsByUserId(userId)) {
-            throw new RuntimeException("Profile already exists");
+        if (serviceProviderRepository.existsByUserId(current.userId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Profile already exists for user: " + current.userId());
         }
 
-        ServiceProvider serviceProvider = new ServiceProvider();
-        serviceProvider.setUserId(userId);
-        serviceProvider.setFirstName(request.getFirstName());
-        serviceProvider.setLastName(request.getLastName());
-        serviceProvider.setPhoneNumber(request.getPhoneNumber());
-        serviceProvider.setServiceCategory(request.getServiceCategory());
-        serviceProviderRepository.save(serviceProvider);
+        ServiceProvider serviceProvider = serviceProviderMapper.toEntity(request);
+        serviceProvider.setUserId(current.userId());
+
+        ServiceProvider saved = serviceProviderRepository.save(serviceProvider);
+        log.info("Created service provider profile for user: {}", current.userId());
+
+        return serviceProviderMapper.toDto(saved);
     }
 
     public List<ServiceProviderResponseDto> getAll() {
         return serviceProviderRepository.findAll()
                 .stream()
-                .map(ServiceProviderMapper::toDto)
+                .map(serviceProviderMapper::toDto)
                 .toList();
     }
 
     public ServiceProviderResponseDto getMyProfile() {
+        Long userId = SecurityUtils.getUserId();
 
-        AuthUser current = SecurityUtils.current();
-
-        Long userId = current.userId();
-
-        ServiceProvider serviceProvider = serviceProviderRepository
+        ServiceProvider sp = serviceProviderRepository
                 .findByUserId(userId)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Profile not found")
-                );
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Profile not found for user: " + userId));
 
-        return ServiceProviderMapper.toDto(serviceProvider);
+        return serviceProviderMapper.toDto(sp);
     }
 
     public ServiceProviderResponseDto getById(Long id) {
         ServiceProvider sp = serviceProviderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No service provider found"));
-        return ServiceProviderMapper.toDto(sp);
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Service provider not found with id: " + id));
+
+        return serviceProviderMapper.toDto(sp);
     }
 
     public ServiceProviderResponseDto getByUserId(Long userId) {
         ServiceProvider sp = serviceProviderRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("No service provider found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Service provider not found for user id: " + userId));
 
-        return ServiceProviderMapper.toDto(sp);
+        return serviceProviderMapper.toDto(sp);
     }
 
-    public ServiceProviderResponseDto update(ServiceProviderUpdateDto dto) {
-
+    @Transactional
+    public ServiceProviderResponseDto updateMyProfile(ServiceProviderUpdateDto dto) {
         AuthUser current = SecurityUtils.current();
 
         if (current.role() != Role.SERVICE) {
-            throw new AccessDeniedException("Only service provider can update vet profile");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only service provider can update profile");
         }
-
-        Long targetUserId = current.userId();
-
-        ServiceProvider serviceProvider = serviceProviderRepository
-                .findByUserId(targetUserId)
-                .orElseThrow(() -> new RuntimeException("Service provider profile not found"));
-
-        ServiceProviderMapper.updateEntity(serviceProvider, dto);
-
-        ServiceProvider saved = serviceProviderRepository.save(serviceProvider);
-
-        return ServiceProviderMapper.toDto(saved);
-    }
-
-
-    public void deleteByUserId(Long userId) {
-        serviceProviderRepository.deleteByUserId(userId);
-
-    }
-
-    public String uploadAvatar(MultipartFile file) {
-
-        AuthUser current = SecurityUtils.current();
 
         ServiceProvider sp = serviceProviderRepository
                 .findByUserId(current.userId())
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Profile not found for user: " + current.userId()));
+
+        serviceProviderMapper.updateEntity(sp, dto);
+
+        ServiceProvider saved = serviceProviderRepository.save(sp);
+        log.info("Updated service provider profile for user: {}", current.userId());
+
+        return serviceProviderMapper.toDto(saved);
+    }
+
+    @Transactional
+    public void deleteMyProfile() {
+        AuthUser current = SecurityUtils.current();
+
+        if (current.role() != Role.SERVICE) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only service provider can delete profile");
+        }
+
+        if (!serviceProviderRepository.existsByUserId(current.userId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Profile not found for user: " + current.userId());
+        }
+
+        serviceProviderRepository.deleteByUserId(current.userId());
+        log.info("Deleted service provider profile for user: {}", current.userId());
+    }
+
+    @Transactional
+    public String uploadAvatar(MultipartFile file) {
+        Long userId = SecurityUtils.getUserId();
+
+        ServiceProvider sp = serviceProviderRepository
+                .findByUserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Profile not found for user: " + userId));
 
         String url = fileStorageService.upload(file);
 
         sp.setAvatarUrl(url);
         serviceProviderRepository.save(sp);
 
+        log.info("Uploaded avatar for service provider user: {}", userId);
         return url;
     }
 }
-
-

@@ -44,7 +44,7 @@ public class AdminService {
             return new HttpEntity<>(headers);
 
         } catch (Exception e) {
-            throw new RuntimeException("❌ TOKEN ERROR: " + e.getMessage(), e);
+            throw new RuntimeException("TOKEN ERROR: " + e.getMessage(), e);
         }
     }
 
@@ -77,12 +77,12 @@ public class AdminService {
                     : List.of();
 
         } catch (HttpClientErrorException e) {
-            System.out.println("❌ PETS CLIENT ERROR: " + e.getStatusCode());
+            System.out.println("PETS CLIENT ERROR: " + e.getStatusCode());
             System.out.println(e.getResponseBodyAsString());
             throw e;
 
         } catch (Exception e) {
-            throw new RuntimeException("❌ PETS ERROR: " + e.getMessage(), e);
+            throw new RuntimeException("PETS ERROR: " + e.getMessage(), e);
         }
     }
 
@@ -120,7 +120,7 @@ public class AdminService {
             owner = ownerResponse.getBody();
 
         } catch (HttpClientErrorException e) {
-            System.out.println("❌ OWNER ERROR: " + e.getStatusCode());
+            System.out.println("OWNER ERROR: " + e.getStatusCode());
             System.out.println(e.getResponseBodyAsString());
         }
 
@@ -134,7 +134,7 @@ public class AdminService {
             petList = pets != null ? Arrays.asList(pets) : List.of();
 
         } catch (HttpClientErrorException e) {
-            System.out.println("❌ PETS ERROR: " + e.getStatusCode());
+            System.out.println("PETS ERROR: " + e.getStatusCode());
             System.out.println(e.getResponseBodyAsString());
         }
 
@@ -163,12 +163,12 @@ public class AdminService {
             return response.getBody();
 
         } catch (HttpClientErrorException e) {
-            System.out.println("❌ VET ERROR: " + e.getStatusCode());
+            System.out.println("VET ERROR: " + e.getStatusCode());
             System.out.println(e.getResponseBodyAsString());
             throw e;
 
         } catch (Exception e) {
-            throw new RuntimeException("❌ VET ERROR: " + e.getMessage(), e);
+            throw new RuntimeException("VET ERROR: " + e.getMessage(), e);
         }
     }
 
@@ -191,12 +191,12 @@ public class AdminService {
             return response.getBody();
 
         } catch (HttpClientErrorException e) {
-            System.out.println("❌ SERVICE ERROR: " + e.getStatusCode());
+            System.out.println("SERVICE ERROR: " + e.getStatusCode());
             System.out.println(e.getResponseBodyAsString());
             throw e;
 
         } catch (Exception e) {
-            throw new RuntimeException("❌ SERVICE ERROR: " + e.getMessage(), e);
+            throw new RuntimeException("SERVICE ERROR: " + e.getMessage(), e);
         }
     }
 }

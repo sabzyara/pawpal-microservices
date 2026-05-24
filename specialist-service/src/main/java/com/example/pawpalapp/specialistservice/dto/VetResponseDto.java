@@ -1,6 +1,5 @@
 package com.example.pawpalapp.specialistservice.dto;
 
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VetResponseDto {
-    private Long id;
+    private Long vetId;
     private Long userId;
     private String firstName;
     private String lastName;
@@ -20,5 +19,12 @@ public class VetResponseDto {
     private String clinicName;
     private Integer experienceYears;
     private String avatarUrl;
+    private Integer patientsCount;
+    private String about;
+    private String education;
+    private Double pricePerVisit;
+    private Double rating;
+    private String address;
+    private String city;
 }
 

@@ -27,7 +27,6 @@ public class JwtConfig {
                 secret.getBytes(),
                 "HmacSHA256"
         );
-
         return NimbusJwtDecoder.withSecretKey(secretKey).build();
     }
 }

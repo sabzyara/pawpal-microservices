@@ -10,11 +10,16 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ServiceProviderCreateDto {
-    private Long userId;
     private String firstName;
     private String lastName;
     private String phoneNumber;
     private String serviceCategory;
+    private Integer experienceYears;
+    private String education;
+    private String address;
+    private String city;
+    private Double pricePerVisit;
+    private String about;
 }
 
 
