@@ -37,7 +37,9 @@ public class ServiceProvider {
 
     private String avatarUrl;
 
-    private Double rating;
+    private Double ratingAverage = 0.0;
+
+    private Integer reviewsCount = 0;
 
     private String address;
 
