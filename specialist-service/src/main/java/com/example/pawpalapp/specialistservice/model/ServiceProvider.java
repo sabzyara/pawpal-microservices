@@ -16,7 +16,7 @@ public class ServiceProvider {
     @Id
     @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="serv_seq_gen")
     @SequenceGenerator(allocationSize=1, name="serv_seq_gen", sequenceName = "servSequence")
-    private Long serviceId;
+    private Long serviceProviderId;
 
     @Column(nullable = false, unique = true)
     private Long userId;
@@ -37,7 +37,9 @@ public class ServiceProvider {
 
     private String avatarUrl;
 
-    private Double rating;
+    private Double ratingAverage = 0.0;
+
+    private Integer reviewsCount = 0;
 
     private String address;
 

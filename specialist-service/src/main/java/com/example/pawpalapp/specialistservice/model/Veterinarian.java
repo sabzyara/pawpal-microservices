@@ -46,7 +46,9 @@ public class Veterinarian {
 
     private Double pricePerVisit;
 
-    private Double rating;
+    private Double ratingAverage = 0.0;
+
+    private Integer reviewsCount = 0;
 
     private String address;
     private String city;

@@ -22,7 +22,8 @@ public class VetMapper {
         vet.setAbout(dto.getAbout());
         vet.setEducation(dto.getEducation());
         vet.setPricePerVisit(dto.getPricePerVisit());
-        vet.setRating(0.0);
+        vet.setRatingAverage(0.0);
+        vet.setReviewsCount(0);
         vet.setAddress(dto.getAddress());
         vet.setCity(dto.getCity());
         return vet;
@@ -45,7 +46,7 @@ public class VetMapper {
         dto.setAbout(vet.getAbout());
         dto.setEducation(vet.getEducation());
         dto.setPricePerVisit(vet.getPricePerVisit());
-        dto.setRating(vet.getRating());
+        dto.setRating(vet.getRatingAverage());
         dto.setAddress(vet.getAddress());
         dto.setCity(vet.getCity());
         return dto;

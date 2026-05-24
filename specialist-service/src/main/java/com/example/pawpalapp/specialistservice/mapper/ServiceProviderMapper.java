@@ -22,7 +22,8 @@ public class ServiceProviderMapper {
         sp.setCity(dto.getCity());
         sp.setPricePerVisit(dto.getPricePerVisit());
         sp.setAbout(dto.getAbout());
-        sp.setRating(0.0);
+        sp.setRatingAverage(0.0);
+        sp.setReviewsCount(0);
         sp.setPatientsCount(0);
         return sp;
     }
@@ -31,7 +32,9 @@ public class ServiceProviderMapper {
         if (sp == null) return null;
 
         ServiceProviderResponseDto dto = new ServiceProviderResponseDto();
-        dto.setServiceId(sp.getServiceId());
+        dto.setServiceId(
+                sp.getServiceProviderId()
+        );
         dto.setUserId(sp.getUserId());
         dto.setFirstName(sp.getFirstName());
         dto.setLastName(sp.getLastName());
@@ -40,7 +43,7 @@ public class ServiceProviderMapper {
         dto.setAvatarUrl(sp.getAvatarUrl());
         dto.setExperienceYears(sp.getExperienceYears());
         dto.setEducation(sp.getEducation());
-        dto.setRating(sp.getRating());
+        dto.setRating(sp.getRatingAverage());
         dto.setAddress(sp.getAddress());
         dto.setCity(sp.getCity());
         dto.setPricePerVisit(sp.getPricePerVisit());
