@@ -38,4 +38,9 @@ public class Veterinarian {
 
     private String avatarUrl;
 
+    private Double ratingAverage = 0.0;
+
+    private Integer reviewsCount = 0;
+
+
 }

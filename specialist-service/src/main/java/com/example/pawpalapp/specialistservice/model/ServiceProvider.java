@@ -32,4 +32,8 @@ public class ServiceProvider {
     private String serviceCategory;
 
     private String avatarUrl;
+
+    private Double ratingAverage = 0.0;
+
+    private Integer reviewsCount = 0;
 }

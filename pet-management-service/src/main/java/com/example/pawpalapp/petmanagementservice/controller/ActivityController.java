@@ -22,7 +22,6 @@ public class ActivityController {
         return service.create(dto);
     }
 
-
     @GetMapping("/pet/{petId}")
     public List<ActivityResponseDto> getByPet(
             @PathVariable Long petId,
