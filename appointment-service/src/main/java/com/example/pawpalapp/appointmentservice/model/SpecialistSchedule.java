@@ -8,11 +8,10 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 @Entity
-@Table(
+@Table(name = "specialist_schedules",
         uniqueConstraints = @UniqueConstraint(
                 columnNames = {"userId", "specialistType", "dayOfWeek"}
-        )
-)
+        ))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,19 +27,23 @@ public class SpecialistSchedule {
     private Long userId;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private SpecialistType specialistType;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private DayOfWeek dayOfWeek;
 
+    @Column(nullable = false)
     private LocalTime workStart;
 
+    @Column(nullable = false)
     private LocalTime workEnd;
 
     private LocalTime breakStart;
 
     private LocalTime breakEnd;
 
+    @Column(nullable = false)
     private Integer slotDurationMinutes;
 }
-
