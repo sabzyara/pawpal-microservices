@@ -32,7 +32,9 @@ public class ServiceProviderMapper {
         if (sp == null) return null;
 
         ServiceProviderResponseDto dto = new ServiceProviderResponseDto();
-        dto.setServiceId(sp.getServiceId());
+        dto.setServiceId(
+                sp.getServiceProviderId()
+        );
         dto.setUserId(sp.getUserId());
         dto.setFirstName(sp.getFirstName());
         dto.setLastName(sp.getLastName());
