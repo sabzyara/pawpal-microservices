@@ -1,16 +1,15 @@
 package com.example.pawpalapp.appointmentservice.dto;
 
+import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 
-@Getter
-@Setter
 @Data
-public class SpecialistScheduleCreateDto {
+@Builder
+public class SpecialistScheduleResponseDto {
+    private Long id;
     private DayOfWeek dayOfWeek;
     private LocalTime workStart;
     private LocalTime workEnd;

@@ -11,14 +11,19 @@ import java.time.LocalTime;
 
 @Entity
 @Table(
-        uniqueConstraints = @UniqueConstraint(
-                columnNames = {
-                        "userId",
-                        "specialistType",
-                        "date",
-                        "startTime"
-                }
-        )
+        name = "appointments",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        columnNames = {"userId", "date", "startTime"}
+                )
+        },
+        indexes = {
+                @Index(columnList = "userId"),
+                @Index(columnList = "petOwnerId"),
+                @Index(columnList = "date"),
+                @Index(columnList = "status"),
+                @Index(columnList = "userId, date, startTime")
+        }
 )
 @Getter
 @Setter
@@ -34,21 +39,51 @@ public class Appointment {
     private Long userId;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private SpecialistType specialistType;
 
+    @Column(nullable = false)
     private Long petOwnerId;
 
     private Long petId;
 
+    @Column(nullable = false)
     private LocalDate date;
 
+    @Column(nullable = false)
     private LocalTime startTime;
 
+    @Column(nullable = false)
     private LocalTime endTime;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private AppointmentStatus status;
 
-    private LocalDateTime createdAt;
-}
+    private String cancellationReason;
 
+    @Column(length = 3000)
+    private String ownerNotes;
+
+    @Column(length = 3000)
+    private String specialistNotes;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (status == null) {
+            status = AppointmentStatus.CREATED;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}

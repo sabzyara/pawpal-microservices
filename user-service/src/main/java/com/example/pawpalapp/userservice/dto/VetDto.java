@@ -19,4 +19,10 @@ public class VetDto {
     private String clinicName;
     private Integer experienceYears;
     private String avatarUrl;
+    private String about;
+    private String education;
+    private Double pricePerVisit;
+    private String address;
+    private String city;
+
 }

@@ -16,4 +16,10 @@ public class ServiceProviderDto {
     private String lastName;
     private String phoneNumber;
     private String serviceCategory;
+    private String about;
+    private String education;
+    private Double pricePerVisit;
+    private String address;
+    private String city;
+
 }

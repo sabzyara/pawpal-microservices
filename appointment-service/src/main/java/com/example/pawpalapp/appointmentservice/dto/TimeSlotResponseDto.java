@@ -1,21 +1,21 @@
 package com.example.pawpalapp.appointmentservice.dto;
 
+import com.example.pawpalapp.appointmentservice.model.enums.SlotStatus;
 import com.example.pawpalapp.appointmentservice.model.enums.SpecialistType;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@Getter
-@Setter
 @Data
-public class AppointmentCreateDto {
-    private Long specialistId;
+@Builder
+public class TimeSlotResponseDto {
+    private Long id;
+    private Long userId;
     private SpecialistType specialistType;
-    private Long petId;
     private LocalDate date;
     private LocalTime startTime;
-    private String ownerNotes;
+    private LocalTime endTime;
+    private SlotStatus status;
 }
