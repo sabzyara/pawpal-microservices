@@ -1,4 +1,4 @@
-from app.notifications import send_smart_notification
+from app.notification_client import send_smart_notification
 
 def check_pet_data():
 
