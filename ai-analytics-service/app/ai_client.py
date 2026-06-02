@@ -57,7 +57,7 @@ def ask_ai(question: str,
         send_smart_notification(
             user_id=user_id,
             title="AI Recommendation",
-            message=ai_text
+            message="AI has generated a new recommendation for your pet. Open the chat to view details."
         )
 
         return {
