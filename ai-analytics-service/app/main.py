@@ -17,7 +17,7 @@ def start_scheduler():
     scheduler.add_job(
         check_pet_data,
         "interval",
-        minutes=1  # пока для теста
+        minutes=5  # пока для теста
     )
 
     scheduler.start()
