@@ -28,7 +28,7 @@ public class ServiceProviderController {
         return serviceProviderService.getMyProfile();
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<ServiceProviderResponseDto>> getAll() {
         return ResponseEntity.ok(serviceProviderService.getAll());
     }
