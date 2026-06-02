@@ -28,12 +28,12 @@ def send_smart_notification(
             json=payload
         )
 
-    print("Notification sent:", response.status_code)
+        print("Notification sent:", response.status_code)
 
-    try:
-        print("Response:", response.json())
-    except:
-        print("Response text:", response.text)
+        try:
+            print("Response:", response.json())
+        except:
+            print("Response text:", response.text)
 
-        except Exception as e:
+    except Exception as e:
         print("Notification error:", e)
