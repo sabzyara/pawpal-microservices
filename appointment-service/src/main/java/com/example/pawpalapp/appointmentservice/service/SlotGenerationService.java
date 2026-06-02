@@ -1,6 +1,8 @@
 package com.example.pawpalapp.appointmentservice.service;
 
+import com.example.pawpalapp.appointmentservice.dto.TimeSlotAvailableRequestDto;
 import com.example.pawpalapp.appointmentservice.dto.TimeSlotResponseDto;
+import com.example.pawpalapp.appointmentservice.mapper.TimeSlotMapper;
 import com.example.pawpalapp.appointmentservice.model.SpecialistSchedule;
 import com.example.pawpalapp.appointmentservice.model.TimeSlot;
 import com.example.pawpalapp.appointmentservice.model.enums.SlotStatus;
@@ -11,92 +13,103 @@ import com.example.pawpalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SlotGenerationService {
 
-    private final SpecialistScheduleRepository scheduleRepository;
     private final TimeSlotRepository timeSlotRepository;
+    private final SpecialistScheduleRepository scheduleRepository;
+    private final TimeSlotMapper timeSlotMapper;
+
+    private static final int DAYS_TO_GENERATE = 30;
+
+    private final ConcurrentMap<String, Boolean> generationLocks = new ConcurrentHashMap<>();
+
+
+    @Scheduled(cron = "0 0 2 * * ?")
+    @Transactional
+    public void scheduledSlotGeneration() {
+        log.info("=== STARTING SCHEDULED SLOT GENERATION ===");
+        long startTime = System.currentTimeMillis();
+
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusDays(DAYS_TO_GENERATE);
+
+        List<SpecialistSchedule> allSchedules = scheduleRepository.findAll();
+        int totalGenerated = 0;
+
+        for (SpecialistSchedule schedule : allSchedules) {
+            totalGenerated += generateMissingSlotsForSchedule(schedule, today, endDate);
+        }
+
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("=== SCHEDULED GENERATION COMPLETED: {} slots generated in {} ms ===",
+                totalGenerated, duration);
+    }
 
     @Transactional
-    public List<TimeSlotResponseDto> generateSlotsForDate(LocalDate date) {
-        Long specialistId = SecurityUtils.getUserId();
-        SpecialistType specialistType = resolveSpecialistType(SecurityUtils.getRole());
+    public void regenerateSlotsForSchedule(SpecialistSchedule schedule) {
+        log.info("Regenerating slots for schedule: specialist={}, dayOfWeek={}",
+                schedule.getSpecialistId(), schedule.getDayOfWeek());
 
-        if (specialistType != SpecialistType.VET && specialistType != SpecialistType.SERVICE) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only specialists can generate slots");
-        }
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusDays(DAYS_TO_GENERATE);
 
-        if (date.isBefore(LocalDate.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot generate slots for past dates");
-        }
+        int deletedCount = 0;
+        LocalDate currentDate = today;
 
-        timeSlotRepository.deleteByUserIdAndSpecialistTypeAndDateAndStatus(
-                specialistId, specialistType, date, SlotStatus.AVAILABLE);
-
-        DayOfWeek dayOfWeek = date.getDayOfWeek();
-        SpecialistSchedule schedule = scheduleRepository
-                .findByUserIdAndSpecialistTypeAndDayOfWeek(specialistId, specialistType, dayOfWeek)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Schedule not found for " + dayOfWeek + ". Please set up your schedule first."));
-
-        List<TimeSlot> slots = generateSlots(specialistId, specialistType, date, schedule);
-        List<TimeSlot> savedSlots = timeSlotRepository.saveAll(slots);
-
-        log.info("Generated {} slots for specialist {} on date {}", savedSlots.size(), specialistId, date);
-
-        return savedSlots.stream()
-                .map(this::toResponseDto)
-                .toList();
-    }
-
-    private List<TimeSlot> generateSlots(Long specialistId, SpecialistType specialistType,
-                                         LocalDate date, SpecialistSchedule schedule) {
-        List<TimeSlot> slots = new ArrayList<>();
-        LocalTime current = schedule.getWorkStart();
-        int duration = schedule.getSlotDurationMinutes();
-
-        while (current.plusMinutes(duration).compareTo(schedule.getWorkEnd()) <= 0) {
-            LocalTime end = current.plusMinutes(duration);
-
-            boolean isBreakTime = isInBreak(current, end, schedule);
-
-            if (!isBreakTime) {
-                slots.add(TimeSlot.builder()
-                        .userId(specialistId)
-                        .specialistType(specialistType)
-                        .date(date)
-                        .startTime(current)
-                        .endTime(end)
-                        .status(SlotStatus.AVAILABLE)
-                        .build());
+        while (!currentDate.isAfter(endDate)) {
+            if (currentDate.getDayOfWeek() == schedule.getDayOfWeek()) {
+                int deleted = timeSlotRepository.deleteBySpecialistIdAndDateAndStatus(
+                        schedule.getSpecialistId(), currentDate, SlotStatus.AVAILABLE
+                );
+                deletedCount += deleted;
             }
-            current = end;
+            currentDate = currentDate.plusDays(1);
         }
-        return slots;
+
+        log.info("Deleted {} old available slots", deletedCount);
+
+        // Генерируем новые слоты только для дат, где нет BOOKED слотов
+        int generatedCount = generateMissingSlotsForSchedule(schedule, today, endDate);
+
+        log.info("Regeneration completed: {} new slots generated", generatedCount);
     }
 
-    private boolean isInBreak(LocalTime start, LocalTime end, SpecialistSchedule schedule) {
-        if (schedule.getBreakStart() == null || schedule.getBreakEnd() == null) {
-            return false;
+    @Transactional
+    public void regenerateSlotsForDate(Long specialistId, LocalDate date) {
+        SpecialistSchedule schedule = scheduleRepository
+                .findBySpecialistIdAndDayOfWeek(specialistId, date.getDayOfWeek())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("No schedule found for specialist %d on %s",
+                                specialistId, date.getDayOfWeek())));
+
+        timeSlotRepository.deleteBySpecialistIdAndDateAndStatus(specialistId, date, SlotStatus.AVAILABLE);
+
+        List<TimeSlot> newSlots = timeSlotMapper.generateSlotsFromSchedule(schedule, date);
+
+        if (!newSlots.isEmpty()) {
+            timeSlotRepository.saveAll(newSlots);
+            log.info("Regenerated {} slots for specialist {} on date {}",
+                    newSlots.size(), specialistId, date);
         }
-        return (!start.isBefore(schedule.getBreakStart()) && !end.isAfter(schedule.getBreakEnd())) ||
-                (start.isBefore(schedule.getBreakEnd()) && end.isAfter(schedule.getBreakStart()));
     }
 
     public Page<TimeSlotResponseDto> getAvailableSlots(Long specialistId, SpecialistType specialistType,
@@ -105,14 +118,206 @@ public class SlotGenerationService {
             return Page.empty(pageable);
         }
 
-        return timeSlotRepository
-                .findByUserIdAndSpecialistTypeAndDateAndStatus(
-                        specialistId, specialistType, date, SlotStatus.AVAILABLE, pageable)
-                .map(this::toResponseDto);
+        List<TimeSlot> slots = getOrGenerateSlots(specialistId, date);
+
+        List<TimeSlot> availableSlots = slots.stream()
+                .filter(slot -> slot.getStatus() == SlotStatus.AVAILABLE)
+                .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), availableSlots.size());
+
+        if (start >= availableSlots.size()) {
+            return Page.empty(pageable);
+        }
+
+        List<TimeSlotResponseDto> content = availableSlots.subList(start, end)
+                .stream()
+                .map(timeSlotMapper::toResponseDto)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(content, pageable, availableSlots.size());
+    }
+
+    private List<TimeSlot> getOrGenerateSlots(Long specialistId, LocalDate date) {
+        List<TimeSlot> existingSlots = timeSlotRepository.findBySpecialistIdAndDate(specialistId, date);
+
+        if (!existingSlots.isEmpty()) {
+            return existingSlots;
+        }
+
+        String lockKey = specialistId + "_" + date;
+        if (generationLocks.putIfAbsent(lockKey, true) == null) {
+            try {
+                return generateSlotsForDateWithLock(specialistId, date);
+            } finally {
+                generationLocks.remove(lockKey);
+            }
+        }
+
+        return waitForGenerationCompletion(specialistId, date);
+    }
+
+    private List<TimeSlot> generateSlotsForDateWithLock(Long specialistId, LocalDate date) {
+        log.info("Lazy generating slots for specialist {} on {}", specialistId, date);
+
+        SpecialistSchedule schedule = scheduleRepository
+                .findBySpecialistIdAndDayOfWeek(specialistId, date.getDayOfWeek())
+                .orElse(null);
+
+        if (schedule == null) {
+            log.warn("No schedule found for specialist {} on {}", specialistId, date.getDayOfWeek());
+            return new ArrayList<>();
+        }
+
+        List<TimeSlot> newSlots = timeSlotMapper.generateSlotsFromSchedule(schedule, date);
+
+        if (!newSlots.isEmpty()) {
+            timeSlotRepository.saveAll(newSlots);
+            log.info("Lazy generated {} slots for specialist {} on {}",
+                    newSlots.size(), specialistId, date);
+        }
+
+        return newSlots;
+    }
+
+    private List<TimeSlot> waitForGenerationCompletion(Long specialistId, LocalDate date) {
+        for (int retries = 0; retries < 20; retries++) {
+            try {
+                Thread.sleep(100);
+                // Исправлено: используем правильное имя метода
+                List<TimeSlot> slots = timeSlotRepository.findBySpecialistIdAndDate(specialistId, date);
+                if (!slots.isEmpty()) {
+                    return slots;
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        return new ArrayList<>();
+    }
+
+    private int generateMissingSlotsForSchedule(SpecialistSchedule schedule,
+                                                LocalDate startDate,
+                                                LocalDate endDate) {
+        List<LocalDate> datesToGenerate = new ArrayList<>();
+        LocalDate currentDate = startDate;
+
+        while (!currentDate.isAfter(endDate)) {
+            if (currentDate.getDayOfWeek() == schedule.getDayOfWeek()) {
+                boolean hasSlots = timeSlotRepository.existsBySpecialistIdAndDate(
+                        schedule.getSpecialistId(), currentDate
+                );
+
+                if (!hasSlots) {
+                    datesToGenerate.add(currentDate);
+                }
+            }
+            currentDate = currentDate.plusDays(1);
+        }
+
+        if (datesToGenerate.isEmpty()) {
+            return 0;
+        }
+
+        List<TimeSlot> allSlots = new ArrayList<>();
+        for (LocalDate date : datesToGenerate) {
+            List<TimeSlot> slots = timeSlotMapper.generateSlotsFromSchedule(schedule, date);
+            allSlots.addAll(slots);
+        }
+
+        if (!allSlots.isEmpty()) {
+            timeSlotRepository.saveAll(allSlots);
+            log.debug("Generated {} slots for specialist {} on {} dates",
+                    allSlots.size(), schedule.getSpecialistId(), datesToGenerate.size());
+        }
+
+        return allSlots.size();
+    }
+
+    @Scheduled(cron = "0 0 3 * * ?")
+    @Transactional
+    public void cleanupOldSlots() {
+        LocalDate thresholdDate = LocalDate.now().minusDays(30);
+        int deleted = timeSlotRepository.deleteByDateBeforeAndStatus(thresholdDate, SlotStatus.BOOKED);
+
+        if (deleted > 0) {
+            log.info("Cleaned up {} old booked slots before {}", deleted, thresholdDate);
+        }
+    }
+
+    public Page<TimeSlotResponseDto> getAvailableSlots(TimeSlotAvailableRequestDto request, Pageable pageable) {
+        return getAvailableSlots(request.getSpecialistId(), request.getSpecialistType(),
+                request.getDate(), pageable);
+    }
+
+    public List<TimeSlotResponseDto> getSlotsByDate(Long specialistId, SpecialistType specialistType, LocalDate date) {
+        List<TimeSlot> slots = getOrGenerateSlots(specialistId, date);
+        return timeSlotMapper.toResponseDtoList(slots);
+    }
+
+    public Page<TimeSlotResponseDto> getMyAvailableSlots(LocalDate date, Pageable pageable) {
+        Long specialistId = SecurityUtils.getUserId();
+        SpecialistType specialistType = resolveSpecialistType(SecurityUtils.getRole());
+        return getAvailableSlots(specialistId, specialistType, date, pageable);
+    }
+
+    @Transactional
+    public TimeSlotResponseDto blockSlot(Long slotId, String reason) {
+        TimeSlot slot = timeSlotRepository.findById(slotId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Time slot not found"));
+
+        Long currentUserId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getRole();
+
+        if (!slot.getSpecialistId().equals(currentUserId) && !"ADMIN".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only block your own slots");
+        }
+
+        if (slot.getStatus() != SlotStatus.AVAILABLE) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    String.format("Cannot block slot with status: %s", slot.getStatus()));
+        }
+
+        slot.setStatus(SlotStatus.BLOCKED);
+        slot.setBlockedReason(reason);
+
+        TimeSlot saved = timeSlotRepository.save(slot);
+        log.info("Blocked slot {} by specialist {}", slotId, currentUserId);
+
+        return timeSlotMapper.toResponseDto(saved);
+    }
+
+    @Transactional
+    public TimeSlotResponseDto unblockSlot(Long slotId) {
+        TimeSlot slot = timeSlotRepository.findById(slotId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Time slot not found"));
+
+        Long currentUserId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getRole();
+
+        if (!slot.getSpecialistId().equals(currentUserId) && !"ADMIN".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only unblock your own slots");
+        }
+
+        if (slot.getStatus() != SlotStatus.BLOCKED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    String.format("Cannot unblock slot with status: %s", slot.getStatus()));
+        }
+
+        slot.setStatus(SlotStatus.AVAILABLE);
+        slot.setBlockedReason(null);
+
+        TimeSlot saved = timeSlotRepository.save(slot);
+        log.info("Unblocked slot {} by specialist {}", slotId, currentUserId);
+
+        return timeSlotMapper.toResponseDto(saved);
     }
 
     private SpecialistType resolveSpecialistType(String role) {
-        return switch (role) {
+        String upperRole = role.toUpperCase();
+        return switch (upperRole) {
             case "VET" -> SpecialistType.VET;
             case "SERVICE" -> SpecialistType.SERVICE;
             default -> throw new ResponseStatusException(
@@ -120,16 +325,5 @@ public class SlotGenerationService {
                     "Invalid specialist role: " + role
             );
         };
-    }
-
-    private TimeSlotResponseDto toResponseDto(TimeSlot slot) {
-        return TimeSlotResponseDto.builder()
-                .id(slot.getId())
-                .userId(slot.getUserId())
-                .date(slot.getDate())
-                .startTime(slot.getStartTime())
-                .endTime(slot.getEndTime())
-                .status(slot.getStatus())
-                .build();
     }
 }

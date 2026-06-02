@@ -16,7 +16,7 @@ import java.time.LocalTime;
         uniqueConstraints = {
                 @UniqueConstraint(
                         columnNames = {
-                                "userId",
+                                "specialistId",
                                 "specialistType",
                                 "date",
                                 "startTime"
@@ -24,7 +24,7 @@ import java.time.LocalTime;
                 )
         },
         indexes = {
-                @Index(columnList = "userId"),
+                @Index(columnList = "specialistId"),
                 @Index(columnList = "date"),
                 @Index(columnList = "status"),
                 @Index(columnList = "userId, date, status")
@@ -42,7 +42,8 @@ public class TimeSlot {
     @SequenceGenerator(allocationSize=1, schema="public",  name="time_slot_seq_gen", sequenceName = "timeSlotSequence")
     private Long id;
 
-    private Long userId;
+    @Column(nullable = false)
+    private Long specialistId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -63,6 +64,33 @@ public class TimeSlot {
 
     private String blockedReason;
 
+
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    public boolean isAvailable() {
+        return status == SlotStatus.AVAILABLE;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (status == null) {
+            status = SlotStatus.AVAILABLE;
+        }
+        if (startTime != null && endTime != null && startTime.isAfter(endTime)) {
+            throw new IllegalArgumentException("Start time must be before end time");
+        }
+    }
+
+    public void book() {
+        if (!isAvailable()) {
+            throw new IllegalStateException("Slot is not available");
+        }
+        this.status = SlotStatus.BOOKED;
+    }
+
+    public void release() {
+        this.status = SlotStatus.AVAILABLE;
+    }
 }
+

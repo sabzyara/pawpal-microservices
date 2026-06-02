@@ -1,5 +1,6 @@
 package com.example.pawpalapp.appointmentservice.dto;
 
+import com.example.pawpalapp.appointmentservice.model.enums.SpecialistType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,6 +11,8 @@ import java.time.LocalTime;
 @Builder
 public class SpecialistScheduleResponseDto {
     private Long id;
+    private Long specialistId;
+    private SpecialistType specialistType;
     private DayOfWeek dayOfWeek;
     private LocalTime workStart;
     private LocalTime workEnd;

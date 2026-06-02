@@ -17,10 +17,12 @@ public class AppointmentResponseDto {
     private SpecialistType specialistType;
     private Long petOwnerId;
     private Long petId;
+    private Long timeSlotId;
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
     private AppointmentStatus status;
+    private String cancellationReason;
     private String ownerNotes;
     private String specialistNotes;
     private LocalDateTime createdAt;

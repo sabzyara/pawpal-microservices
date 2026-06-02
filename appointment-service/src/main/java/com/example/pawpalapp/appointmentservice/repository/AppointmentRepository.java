@@ -16,69 +16,51 @@ import java.util.List;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-    Page<Appointment> findByPetOwnerIdOrderByDateDescStartTimeDesc(
-            Long petOwnerId,
-            Pageable pageable
-    );
+    boolean existsByTimeSlotId(Long timeSlotId);
 
-    Page<Appointment> findByPetOwnerIdAndStatus(
-            Long petOwnerId,
-            AppointmentStatus status,
-            Pageable pageable
-    );
 
-    Page<Appointment> findByUserIdOrderByDateDescStartTimeDesc(
-            Long userId,
-            Pageable pageable
-    );
 
-    Page<Appointment> findByUserIdAndStatus(
-            Long userId,
-            AppointmentStatus status,
-            Pageable pageable
-    );
+    @Query("SELECT a FROM Appointment a WHERE a.id = :id")
 
-    @Query("""
-        SELECT a FROM Appointment a
-        WHERE a.petOwnerId = :petOwnerId
-        AND (
-            a.date > :today
-            OR (a.date = :today AND a.startTime > :now)
-        )
-        AND a.status NOT IN (
-            com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus.CANCELLED,
-            com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus.COMPLETED
-        )
-        ORDER BY a.date ASC, a.startTime ASC
-    """)
-    List<Appointment> findUpcomingByPetOwnerId(
-            @Param("petOwnerId") Long petOwnerId,
-            @Param("today") LocalDate today,
-            @Param("now") LocalTime now
-    );
 
-    @Query("""
-        SELECT a FROM Appointment a
-        WHERE a.userId = :userId
-        AND (
-            a.date > :today
-            OR (a.date = :today AND a.startTime > :now)
-        )
-        AND a.status NOT IN (
-            com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus.CANCELLED,
-            com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus.COMPLETED
-        )
-        ORDER BY a.date ASC, a.startTime ASC
-    """)
-    List<Appointment> findUpcomingByUserId(
-            @Param("userId") Long userId,
-            @Param("today") LocalDate today,
-            @Param("now") LocalTime now
-    );
+    Page<Appointment> findByPetOwnerIdOrderByDateDescStartTimeDesc(Long petOwnerId, Pageable pageable);
 
-    boolean existsByUserIdAndDateAndStartTime(
-            Long userId,
-            LocalDate date,
-            LocalTime startTime
-    );
+
+    Page<Appointment> findByPetOwnerIdAndStatus(Long petOwnerId, AppointmentStatus status, Pageable pageable);
+
+
+
+    @Query("SELECT a FROM Appointment a " +
+            "WHERE a.petOwnerId = :petOwnerId " +
+            "AND (a.date > :today OR (a.date = :today AND a.startTime >= :now)) " +
+            "AND a.status IN (" +
+            "T(com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus).CREATED, " +
+            "T(com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus).CONFIRMED) " +
+            "ORDER BY a.date ASC, a.startTime ASC")
+    List<Appointment> findUpcomingByPetOwnerId(@Param("petOwnerId") Long petOwnerId,
+                                               @Param("today") LocalDate today,
+                                               @Param("now") LocalTime now);
+
+
+    @Query("SELECT a FROM Appointment a " +
+            "WHERE a.petOwnerId = :petOwnerId " +
+            "AND (a.date < :today OR (a.date = :today AND a.startTime < :now)) " +
+            "ORDER BY a.date DESC, a.startTime DESC")
+
+    Page<Appointment> findBySpecialistIdOrderByDateDescStartTimeDesc(Long specialistId, Pageable pageable);
+
+
+    Page<Appointment> findBySpecialistIdAndStatus(Long specialistId, AppointmentStatus status, Pageable pageable);
+
+    @Query("SELECT a FROM Appointment a " +
+            "WHERE a.specialistId = :specialistId " +
+            "AND (a.date > :today OR (a.date = :today AND a.startTime >= :now)) " +
+            "AND a.status IN (" +
+            "T(com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus).CREATED, " +
+            "T(com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus).CONFIRMED) " +
+            "ORDER BY a.date ASC, a.startTime ASC")
+    List<Appointment> findUpcomingBySpecialistId(@Param("specialistId") Long specialistId,
+                                                 @Param("today") LocalDate today,
+                                                 @Param("now") LocalTime now);
+
 }
