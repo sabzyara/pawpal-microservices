@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -429,15 +430,18 @@ public class AppointmentService {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
 
+        // Создаем список статусов
+        List<AppointmentStatus> statuses = Arrays.asList(AppointmentStatus.CREATED, AppointmentStatus.CONFIRMED);
+
         List<Appointment> appointments;
 
         if ("owner".equalsIgnoreCase(userType)) {
             if (!"OWNER".equals(role)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
             }
-            appointments = appointmentRepository.findUpcomingByPetOwnerId(userId, today, now);
+            // Передаем статусы
+            appointments = appointmentRepository.findUpcomingByPetOwnerId(userId, today, now, statuses);
 
-            // Владелец видит только рекомендации
             int start = (int) pageable.getOffset();
             int end = Math.min((start + pageable.getPageSize()), appointments.size());
 
@@ -456,9 +460,9 @@ public class AppointmentService {
             if (!isSpecialistRole(role)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
             }
-            appointments = appointmentRepository.findUpcomingBySpecialistId(userId, today, now);
+            // Передаем статусы
+            appointments = appointmentRepository.findUpcomingBySpecialistId(userId, today, now, statuses);
 
-            // Специалист видит всё
             int start = (int) pageable.getOffset();
             int end = Math.min((start + pageable.getPageSize()), appointments.size());
 
