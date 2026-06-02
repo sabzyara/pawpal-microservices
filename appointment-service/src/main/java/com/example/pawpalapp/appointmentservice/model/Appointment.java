@@ -11,7 +11,7 @@ import java.time.LocalTime;
 
 @Entity
 @Table(
-        name = "appointments",
+        name = "appointment",
         indexes = {
                 @Index(columnList = "specialistId"),
                 @Index(columnList = "petOwnerId"),
