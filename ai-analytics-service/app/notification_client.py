@@ -29,7 +29,7 @@ def send_smart_notification(
         )
 
         print("Notification sent:", response.status_code)
-        print(response.text)
+        print("Response:", response.json())
 
     except Exception as e:
         print("Notification error:", e)
