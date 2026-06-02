@@ -52,6 +52,8 @@ def ask_ai(question: str,
 
         ai_text = response.text
 
+        print("AI RESPONSE:", ai_text)
+
         send_smart_notification(
             user_id=user_id,
             title="AI Recommendation",
