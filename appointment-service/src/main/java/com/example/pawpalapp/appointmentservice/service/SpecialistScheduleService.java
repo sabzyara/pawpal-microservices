@@ -2,8 +2,9 @@ package com.example.pawpalapp.appointmentservice.service;
 
 import com.example.pawpalapp.appointmentservice.dto.SpecialistScheduleCreateDto;
 import com.example.pawpalapp.appointmentservice.dto.SpecialistScheduleResponseDto;
+import com.example.pawpalapp.appointmentservice.dto.SpecialistScheduleUpdateDto;
+import com.example.pawpalapp.appointmentservice.mapper.SpecialistScheduleMapper;
 import com.example.pawpalapp.appointmentservice.model.SpecialistSchedule;
-import com.example.pawpalapp.appointmentservice.model.enums.SlotStatus;
 import com.example.pawpalapp.appointmentservice.model.enums.SpecialistType;
 import com.example.pawpalapp.appointmentservice.repository.SpecialistScheduleRepository;
 import com.example.pawpalapp.appointmentservice.repository.TimeSlotRepository;
@@ -16,99 +17,166 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SpecialistScheduleService {
 
     private final SpecialistScheduleRepository scheduleRepository;
     private final TimeSlotRepository timeSlotRepository;
+    private final SpecialistScheduleMapper scheduleMapper;
+    private final SlotGenerationService slotGenerationService;
 
     @Transactional
-    public SpecialistScheduleResponseDto createOrUpdateSchedule(SpecialistScheduleCreateDto request) {
-        Long specialistId = SecurityUtils.getUserId();
-        SpecialistType specialistType = resolveSpecialistType(SecurityUtils.getRole());
+    public SpecialistScheduleResponseDto createSchedule(SpecialistScheduleCreateDto request) {
+        Long currentUserId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getRole();
+        SpecialistType specialistType = resolveSpecialistType(role);
+
+        if (!request.getSpecialistId().equals(currentUserId) && !"ADMIN".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only create schedule for yourself");
+        }
+
+        if (request.getSpecialistType() != specialistType && !"ADMIN".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Specialist type does not match your role");
+        }
 
         validateSchedule(request);
 
-        SpecialistSchedule schedule = scheduleRepository
-                .findByUserIdAndSpecialistTypeAndDayOfWeek(specialistId, specialistType, request.getDayOfWeek())
-                .map(existing -> updateSchedule(existing, request))
-                .orElseGet(() -> createSchedule(specialistId, specialistType, request));
+        if (scheduleRepository.existsBySpecialistIdAndSpecialistTypeAndDayOfWeek(
+                request.getSpecialistId(), request.getSpecialistType(), request.getDayOfWeek())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    String.format("Schedule already exists for %s on %s",
+                            request.getSpecialistType(), request.getDayOfWeek()));
+        }
 
-        return toResponseDto(schedule);
-    }
+        SpecialistSchedule schedule = scheduleMapper.toEntity(request);
+        schedule = scheduleRepository.save(schedule);
 
-    private SpecialistSchedule createSchedule(Long userId, SpecialistType type, SpecialistScheduleCreateDto request) {
-        SpecialistSchedule schedule = SpecialistSchedule.builder()
-                .userId(userId)
-                .specialistType(type)
-                .dayOfWeek(request.getDayOfWeek())
-                .workStart(request.getWorkStart())
-                .workEnd(request.getWorkEnd())
-                .breakStart(request.getBreakStart())
-                .breakEnd(request.getBreakEnd())
-                .slotDurationMinutes(request.getSlotDurationMinutes())
-                .build();
-        return scheduleRepository.save(schedule);
-    }
+        slotGenerationService.regenerateSlotsForSchedule(schedule);
 
-    private SpecialistSchedule updateSchedule(SpecialistSchedule existing, SpecialistScheduleCreateDto request) {
-        existing.setWorkStart(request.getWorkStart());
-        existing.setWorkEnd(request.getWorkEnd());
-        existing.setBreakStart(request.getBreakStart());
-        existing.setBreakEnd(request.getBreakEnd());
-        existing.setSlotDurationMinutes(request.getSlotDurationMinutes());
-        return scheduleRepository.save(existing);
+        log.info("Created schedule for specialist {} on {}", schedule.getSpecialistId(), schedule.getDayOfWeek());
+
+        return scheduleMapper.toResponseDto(schedule);
     }
 
     @Transactional
-    public void regenerateSlotsForDate(LocalDate date) {
-        Long userId = SecurityUtils.getUserId();
-        SpecialistType specialistType = resolveSpecialistType(SecurityUtils.getRole());
+    public SpecialistScheduleResponseDto updateSchedule(Long id, SpecialistScheduleUpdateDto request) {
+        SpecialistSchedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
 
-        timeSlotRepository.deleteByUserIdAndSpecialistTypeAndDateAndStatus(
-                userId, specialistType, date, SlotStatus.AVAILABLE);
+        Long currentUserId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getRole();
 
-        log.info("Deleted AVAILABLE slots for specialist {} on date {}", userId, date);
+        if (!schedule.getSpecialistId().equals(currentUserId) && !"ADMIN".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only update your own schedule");
+        }
+
+        validateUpdate(request);
+
+        scheduleMapper.updateEntity(schedule, request);
+        schedule = scheduleRepository.save(schedule);
+
+        // Делегируем перегенерацию слотов в SlotGenerationService
+        slotGenerationService.regenerateSlotsForSchedule(schedule);
+
+        log.info("Updated schedule {} for specialist {}", id, schedule.getSpecialistId());
+
+        return scheduleMapper.toResponseDto(schedule);
     }
 
     @Transactional
-    public void deleteSchedule(DayOfWeek dayOfWeek) {
-        Long userId = SecurityUtils.getUserId();
+    public void deleteSchedule(Long id) {
+        SpecialistSchedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
+
+        Long currentUserId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getRole();
+
+        if (!schedule.getSpecialistId().equals(currentUserId) && !"ADMIN".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own schedule");
+        }
+
+        scheduleRepository.delete(schedule);
+        log.info("Deleted schedule {} for specialist {}", id, schedule.getSpecialistId());
+    }
+
+    @Transactional
+    public void deleteScheduleByDay(DayOfWeek dayOfWeek) {
+        Long specialistId = SecurityUtils.getUserId();
         SpecialistType specialistType = resolveSpecialistType(SecurityUtils.getRole());
 
-        scheduleRepository.deleteByUserIdAndSpecialistTypeAndDayOfWeek(userId, specialistType, dayOfWeek);
-        log.info("Deleted schedule for specialist {} on {}", userId, dayOfWeek);
+        if (!scheduleRepository.existsBySpecialistIdAndSpecialistTypeAndDayOfWeek(
+                specialistId, specialistType, dayOfWeek)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    String.format("No schedule found for %s on %s", specialistType, dayOfWeek));
+        }
+
+        scheduleRepository.deleteBySpecialistIdAndSpecialistTypeAndDayOfWeek(specialistId, specialistType, dayOfWeek);
+        log.info("Deleted schedule for specialist {} on {}", specialistId, dayOfWeek);
     }
+
 
     public List<SpecialistScheduleResponseDto> getMySchedules() {
-        Long userId = SecurityUtils.getUserId();
+        Long specialistId = SecurityUtils.getUserId();
         SpecialistType specialistType = resolveSpecialistType(SecurityUtils.getRole());
 
-        return scheduleRepository.findByUserIdAndSpecialistType(userId, specialistType)
-                .stream()
-                .map(this::toResponseDto)
+        List<SpecialistSchedule> schedules = scheduleRepository
+                .findBySpecialistIdAndSpecialistType(specialistId, specialistType);
+
+        return schedules.stream()
+                .map(scheduleMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
-    private SpecialistType resolveSpecialistType(String role) {
-        return switch (role) {
-            case "VET" -> SpecialistType.VET;
-            case "SERVICE" -> SpecialistType.SERVICE;
-            default -> throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Invalid specialist role: " + role
-            );
-        };
+    public SpecialistScheduleResponseDto getScheduleById(Long id) {
+        SpecialistSchedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
+
+        Long currentUserId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getRole();
+
+        boolean isOwner = schedule.getSpecialistId().equals(currentUserId);
+        if (!isOwner && !"ADMIN".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        return scheduleMapper.toResponseDto(schedule);
     }
 
+    public SpecialistScheduleResponseDto getScheduleByDay(DayOfWeek dayOfWeek) {
+        Long specialistId = SecurityUtils.getUserId();
+        SpecialistType specialistType = resolveSpecialistType(SecurityUtils.getRole());
+
+        SpecialistSchedule schedule = scheduleRepository
+                .findBySpecialistIdAndSpecialistTypeAndDayOfWeek(specialistId, specialistType, dayOfWeek)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("No schedule found for %s on %s", specialistType, dayOfWeek)));
+
+        return scheduleMapper.toResponseDto(schedule);
+    }
+
+    public List<SpecialistScheduleResponseDto> getSchedulesBySpecialist(Long specialistId) {
+        String role = SecurityUtils.getRole();
+        if (!"ADMIN".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admin can view other specialists' schedules");
+        }
+
+        List<SpecialistSchedule> schedules = scheduleRepository.findBySpecialistId(specialistId);
+        return schedules.stream()
+                .map(scheduleMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+
     private void validateSchedule(SpecialistScheduleCreateDto request) {
+        if (request.getWorkStart() == null || request.getWorkEnd() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Work start and end times are required");
+        }
         if (!request.getWorkStart().isBefore(request.getWorkEnd())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Work start must be before work end");
         }
@@ -129,15 +197,35 @@ public class SpecialistScheduleService {
         }
     }
 
-    private SpecialistScheduleResponseDto toResponseDto(SpecialistSchedule schedule) {
-        return SpecialistScheduleResponseDto.builder()
-                .id(schedule.getId())
-                .dayOfWeek(schedule.getDayOfWeek())
-                .workStart(schedule.getWorkStart())
-                .workEnd(schedule.getWorkEnd())
-                .breakStart(schedule.getBreakStart())
-                .breakEnd(schedule.getBreakEnd())
-                .slotDurationMinutes(schedule.getSlotDurationMinutes())
-                .build();
+    private void validateUpdate(SpecialistScheduleUpdateDto request) {
+        if (request.getWorkStart() != null && request.getWorkEnd() != null) {
+            if (!request.getWorkStart().isBefore(request.getWorkEnd())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Work start must be before work end");
+            }
+        }
+        if (request.getSlotDurationMinutes() != null) {
+            if (request.getSlotDurationMinutes() <= 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Slot duration must be positive");
+            }
+            if (request.getSlotDurationMinutes() > 240) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Slot duration cannot exceed 4 hours");
+            }
+        }
+    }
+
+    private SpecialistType resolveSpecialistType(String role) {
+        String upperRole = role.toUpperCase();
+        return switch (upperRole) {
+            case "VET" -> SpecialistType.VET;
+            case "SERVICE" -> SpecialistType.SERVICE;
+            case "ADMIN" -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Admin must specify specialist type in request"
+            );
+            default -> throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Invalid specialist role: " + role
+            );
+        };
     }
 }

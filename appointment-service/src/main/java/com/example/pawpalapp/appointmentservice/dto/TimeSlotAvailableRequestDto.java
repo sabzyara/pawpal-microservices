@@ -1,21 +1,17 @@
 package com.example.pawpalapp.appointmentservice.dto;
 
 import com.example.pawpalapp.appointmentservice.model.enums.SpecialistType;
+
 import lombok.Data;
-import org.antlr.v4.runtime.misc.NotNull;
+
+import java.time.LocalDate;
 
 @Data
-public class AppointmentCreateDto {
+public class TimeSlotAvailableRequestDto {
 
     private Long specialistId;
 
     private SpecialistType specialistType;
 
-    private Long petOwnerId;
-
-    private Long petId;
-
-    private Long timeSlotId;
-
-    private String ownerNotes;
+    private LocalDate date;
 }

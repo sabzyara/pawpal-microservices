@@ -12,10 +12,11 @@ import java.time.LocalTime;
 @Builder
 public class TimeSlotResponseDto {
     private Long id;
-    private Long userId;
+    private Long specialistId;
     private SpecialistType specialistType;
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
     private SlotStatus status;
+    private boolean isAvailable;
 }

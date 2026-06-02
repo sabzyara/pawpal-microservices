@@ -4,18 +4,29 @@ import com.example.pawpalapp.appointmentservice.model.SpecialistSchedule;
 import com.example.pawpalapp.appointmentservice.model.enums.SpecialistType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Modifying;
+
 
 @Repository
 public interface SpecialistScheduleRepository extends JpaRepository<SpecialistSchedule, Long> {
 
-    Optional<SpecialistSchedule> findByUserIdAndSpecialistTypeAndDayOfWeek(
-            Long userId, SpecialistType specialistType, DayOfWeek dayOfWeek);
+    Optional<SpecialistSchedule> findBySpecialistIdAndDayOfWeek(Long specialistId, DayOfWeek dayOfWeek);
 
-    List<SpecialistSchedule> findByUserIdAndSpecialistType(Long userId, SpecialistType specialistType);
+    List<SpecialistSchedule> findBySpecialistIdAndSpecialistType(Long specialistId, SpecialistType specialistType);
 
-    void deleteByUserIdAndSpecialistTypeAndDayOfWeek(Long userId, SpecialistType specialistType, DayOfWeek dayOfWeek);
+    Optional<SpecialistSchedule> findBySpecialistIdAndSpecialistTypeAndDayOfWeek(
+            Long specialistId, SpecialistType specialistType, DayOfWeek dayOfWeek);
+
+    boolean existsBySpecialistIdAndSpecialistTypeAndDayOfWeek(
+            Long specialistId, SpecialistType specialistType, DayOfWeek dayOfWeek);
+
+    @Modifying
+    void deleteBySpecialistIdAndSpecialistTypeAndDayOfWeek(
+            Long specialistId, SpecialistType specialistType, DayOfWeek dayOfWeek);
+
+    List<SpecialistSchedule> findBySpecialistId(Long specialistId);
+
 }

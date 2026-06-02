@@ -10,7 +10,7 @@ import java.time.LocalTime;
 @Entity
 @Table(name = "specialist_schedules",
         uniqueConstraints = @UniqueConstraint(
-                columnNames = {"userId", "specialistType", "dayOfWeek"}
+                columnNames = {"specialistId", "specialistType", "dayOfWeek"}
         ))
 @Getter
 @Setter
@@ -24,7 +24,8 @@ public class SpecialistSchedule {
     @SequenceGenerator(allocationSize=1, schema="public",  name="schedule_seq_gen", sequenceName = "scheduleSequence")
     private Long id;
 
-    private Long userId;
+    @Column(nullable = false)
+    private Long specialistId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -46,4 +47,29 @@ public class SpecialistSchedule {
 
     @Column(nullable = false)
     private Integer slotDurationMinutes;
+
+    @PrePersist
+    @PreUpdate
+    private void validate() {
+        if (workStart == null || workEnd == null) {
+            throw new IllegalArgumentException("Work start and end times are required");
+        }
+
+        if (workStart.isAfter(workEnd)) {
+            throw new IllegalArgumentException("Work start must be before work end");
+        }
+
+        if (breakStart != null && breakEnd != null) {
+            if (breakStart.isAfter(breakEnd)) {
+                throw new IllegalArgumentException("Break start must be before break end");
+            }
+            if (breakStart.isBefore(workStart) || breakEnd.isAfter(workEnd)) {
+                throw new IllegalArgumentException("Break must be within working hours");
+            }
+        }
+
+        if (slotDurationMinutes == null || slotDurationMinutes <= 0) {
+            throw new IllegalArgumentException("Slot duration must be positive");
+        }
+    }
 }

@@ -12,17 +12,13 @@ import java.time.LocalTime;
 @Entity
 @Table(
         name = "appointments",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        columnNames = {"userId", "date", "startTime"}
-                )
-        },
         indexes = {
-                @Index(columnList = "userId"),
+                @Index(columnList = "specialistId"),
                 @Index(columnList = "petOwnerId"),
+                @Index(columnList = "timeSlotId"),
                 @Index(columnList = "date"),
                 @Index(columnList = "status"),
-                @Index(columnList = "userId, date, startTime")
+                @Index(columnList = "specialistId, date, status")
         }
 )
 @Getter
@@ -34,9 +30,11 @@ public class Appointment {
 
     @Id
     @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="appointment_seq_gen")
-    @SequenceGenerator(allocationSize=1, schema="public",  name="appointment_seq_gen", sequenceName = "appointmentSequence")    private Long id;
+    @SequenceGenerator(allocationSize=1, schema="public",  name="appointment_seq_gen", sequenceName = "appointmentSequence")
+    private Long id;
 
-    private Long userId;
+    @Column(nullable = false)
+    private Long specialistId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -45,7 +43,11 @@ public class Appointment {
     @Column(nullable = false)
     private Long petOwnerId;
 
+    @Column(nullable = false)
     private Long petId;
+
+    @Column(nullable = false)
+    private Long timeSlotId;
 
     @Column(nullable = false)
     private LocalDate date;
