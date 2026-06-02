@@ -9,10 +9,10 @@ from app.smart_reminders import check_pet_data
 
 app = FastAPI(title="PawPal AI Analytics Service")
 
+scheduler = BackgroundScheduler()
+
 @app.on_event("startup")
 def start_scheduler():
-
-    scheduler = BackgroundScheduler()
 
     scheduler.add_job(
         check_pet_data,
