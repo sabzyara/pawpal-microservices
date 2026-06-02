@@ -12,55 +12,51 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
     boolean existsByTimeSlotId(Long timeSlotId);
 
-
-
     @Query("SELECT a FROM Appointment a WHERE a.id = :id")
-
+    Optional<Appointment> findById(@Param("id") Long id);
 
     Page<Appointment> findByPetOwnerIdOrderByDateDescStartTimeDesc(Long petOwnerId, Pageable pageable);
 
-
     Page<Appointment> findByPetOwnerIdAndStatus(Long petOwnerId, AppointmentStatus status, Pageable pageable);
 
-
-
+    // ИСПРАВЛЕНО: убрали T() синтаксис, используем параметр
     @Query("SELECT a FROM Appointment a " +
             "WHERE a.petOwnerId = :petOwnerId " +
             "AND (a.date > :today OR (a.date = :today AND a.startTime >= :now)) " +
-            "AND a.status IN (" +
-            "T(com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus).CREATED, " +
-            "T(com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus).CONFIRMED) " +
+            "AND a.status IN :statuses " +
             "ORDER BY a.date ASC, a.startTime ASC")
     List<Appointment> findUpcomingByPetOwnerId(@Param("petOwnerId") Long petOwnerId,
                                                @Param("today") LocalDate today,
-                                               @Param("now") LocalTime now);
-
+                                               @Param("now") LocalTime now,
+                                               @Param("statuses") List<AppointmentStatus> statuses);
 
     @Query("SELECT a FROM Appointment a " +
             "WHERE a.petOwnerId = :petOwnerId " +
             "AND (a.date < :today OR (a.date = :today AND a.startTime < :now)) " +
             "ORDER BY a.date DESC, a.startTime DESC")
+    Page<Appointment> findPastByPetOwnerId(@Param("petOwnerId") Long petOwnerId,
+                                           @Param("today") LocalDate today,
+                                           @Param("now") LocalTime now,
+                                           Pageable pageable);
 
     Page<Appointment> findBySpecialistIdOrderByDateDescStartTimeDesc(Long specialistId, Pageable pageable);
-
 
     Page<Appointment> findBySpecialistIdAndStatus(Long specialistId, AppointmentStatus status, Pageable pageable);
 
     @Query("SELECT a FROM Appointment a " +
             "WHERE a.specialistId = :specialistId " +
             "AND (a.date > :today OR (a.date = :today AND a.startTime >= :now)) " +
-            "AND a.status IN (" +
-            "T(com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus).CREATED, " +
-            "T(com.example.pawpalapp.appointmentservice.model.enums.AppointmentStatus).CONFIRMED) " +
+            "AND a.status IN :statuses " +
             "ORDER BY a.date ASC, a.startTime ASC")
     List<Appointment> findUpcomingBySpecialistId(@Param("specialistId") Long specialistId,
                                                  @Param("today") LocalDate today,
-                                                 @Param("now") LocalTime now);
-
+                                                 @Param("now") LocalTime now,
+                                                 @Param("statuses") List<AppointmentStatus> statuses);
 }
