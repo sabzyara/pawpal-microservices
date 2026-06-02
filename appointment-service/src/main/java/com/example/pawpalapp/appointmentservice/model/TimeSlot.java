@@ -12,7 +12,7 @@ import java.time.LocalTime;
 
 @Entity
 @Table(
-        name = "time_slots",
+        name = "time_slot",
         uniqueConstraints = {
                 @UniqueConstraint(
                         columnNames = {

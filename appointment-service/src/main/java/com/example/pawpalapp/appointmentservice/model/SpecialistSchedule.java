@@ -8,7 +8,7 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "specialist_schedules",
+@Table(name = "specialist_schedule",
         uniqueConstraints = @UniqueConstraint(
                 columnNames = {"specialistId", "specialistType", "dayOfWeek"}
         ))
