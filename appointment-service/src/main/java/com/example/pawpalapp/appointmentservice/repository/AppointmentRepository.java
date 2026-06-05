@@ -26,7 +26,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     Page<Appointment> findByPetOwnerIdAndStatus(Long petOwnerId, AppointmentStatus status, Pageable pageable);
 
-    // ИСПРАВЛЕНО: убрали T() синтаксис, используем параметр
     @Query("SELECT a FROM Appointment a " +
             "WHERE a.petOwnerId = :petOwnerId " +
             "AND (a.date > :today OR (a.date = :today AND a.startTime >= :now)) " +

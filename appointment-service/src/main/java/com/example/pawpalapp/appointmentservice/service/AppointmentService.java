@@ -106,17 +106,14 @@ public class AppointmentService {
         TimeSlot slot = timeSlotRepository.findById(appointment.getTimeSlotId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Time slot not found"));
 
-        if (slot.getStatus() != SlotStatus.AVAILABLE) {
+        if (slot.getStatus() != SlotStatus.BOOKED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Time slot is no longer available");
         }
-
-        slot.book();
-        timeSlotRepository.save(slot);
 
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointment = appointmentRepository.save(appointment);
 
-        log.info("Confirmed appointment {} and booked slot {}", id, slot.getId());
+        log.info("Confirmed appointment {} (slot {} already booked)", id, slot.getId());
 
         return appointmentMapper.toResponseDto(appointment);
     }
@@ -519,9 +516,7 @@ public class AppointmentService {
     }
 
     private boolean isSpecialistRole(String role) {
-        return "VET".equals(role) || "SERVICE".equals(role) ||
-                "GROOMER".equals(role) || "TRAINER".equals(role) ||
-                "DENTIST".equals(role) || "SURGEON".equals(role);
+        return "VET".equals(role) || "SERVICE".equals(role) ;
     }
 
     private void validateStatusTransition(AppointmentStatus currentStatus, AppointmentStatus newStatus) {
