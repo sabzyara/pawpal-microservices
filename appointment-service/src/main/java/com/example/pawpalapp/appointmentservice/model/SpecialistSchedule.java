@@ -27,6 +27,9 @@ public class SpecialistSchedule {
     @Column(nullable = false)
     private Long specialistId;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SpecialistType specialistType;
