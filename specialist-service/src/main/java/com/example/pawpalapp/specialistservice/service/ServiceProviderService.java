@@ -78,10 +78,29 @@ public class ServiceProviderService {
         return serviceProviderMapper.toDto(sp);
     }
 
+//    public ServiceProviderResponseDto getByUserId(Long userId) {
+//        ServiceProvider sp = serviceProviderRepository.findByUserId(userId)
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+//                        "Service provider not found for user id: " + userId));
+//
+//        return serviceProviderMapper.toDto(sp);
+//    }
+
     public ServiceProviderResponseDto getByUserId(Long userId) {
+
+        System.out.println("SEARCH USER ID = " + userId);
+
         ServiceProvider sp = serviceProviderRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Service provider not found for user id: " + userId));
+                .orElse(null);
+
+        System.out.println("FOUND = " + sp);
+
+        if (sp == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Service provider not found for user id: " + userId
+            );
+        }
 
         return serviceProviderMapper.toDto(sp);
     }
