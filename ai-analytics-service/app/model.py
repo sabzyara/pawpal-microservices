@@ -13,9 +13,6 @@ class RecommendationModel:
 
         score = 100
 
-        # -----------------------------
-        # Species activity norms
-        # -----------------------------
         activity_norms = {
             "dog": 60,
             "cat": 30,
@@ -40,9 +37,6 @@ class RecommendationModel:
             )
         )
 
-        # -----------------------------
-        # Activity analysis
-        # -----------------------------
         if activity < expected_activity * 0.5:
             recommendations.append(
                 "Daily activity level is critically below the recommended range"
@@ -60,9 +54,6 @@ class RecommendationModel:
                 "Physical activity level is within the healthy range"
             )
 
-        # -----------------------------
-        # Nutrition analysis
-        # -----------------------------
         if calories > expected_calories * 1.25:
             recommendations.append(
                 "Calorie intake exceeds the recommended daily amount"
@@ -80,9 +71,6 @@ class RecommendationModel:
                 "Nutrition balance appears appropriate"
             )
 
-        # -----------------------------
-        # Species-specific recommendations
-        # -----------------------------
         if species == "cat" and activity < 20:
             recommendations.append(
                 "Increase interactive play sessions for mental stimulation"
@@ -95,9 +83,6 @@ class RecommendationModel:
             )
             score -= 10
 
-        # -----------------------------
-        # Age analysis
-        # -----------------------------
         if age >= 8:
             recommendations.append(
                 "Senior pet monitoring is recommended"
@@ -109,9 +94,6 @@ class RecommendationModel:
                 )
                 score -= 5
 
-        # -----------------------------
-        # Health condition analysis
-        # -----------------------------
         if "obesity" in health_status:
             recommendations.append(
                 "Weight control and veterinary supervision are recommended"
@@ -124,18 +106,13 @@ class RecommendationModel:
             )
             score -= 15
 
-        # -----------------------------
-        # Breed-specific logic
-        # -----------------------------
         if breed in ["labrador", "beagle"] and calories > expected_calories:
             recommendations.append(
                 "This breed may have increased obesity risk"
             )
             score -= 5
 
-        # -----------------------------
-        # Missing data analysis
-        # -----------------------------
+
         if calories == 0:
             recommendations.append(
                 "No nutrition records were detected"
@@ -148,9 +125,6 @@ class RecommendationModel:
             )
             score -= 20
 
-        # -----------------------------
-        # Final score normalization
-        # -----------------------------
         score = max(score, 0)
 
         if score >= 80:
