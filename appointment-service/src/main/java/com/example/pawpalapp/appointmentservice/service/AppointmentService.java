@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -25,6 +26,8 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+
 
 @Slf4j
 @Service
@@ -35,6 +38,7 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final TimeSlotRepository timeSlotRepository;
     private final AppointmentMapper appointmentMapper;
+    private final RestTemplate restTemplate;
 
     @Transactional
     public AppointmentResponseDto createAppointment(AppointmentCreateDto request) {
@@ -78,6 +82,50 @@ public class AppointmentService {
 
         slot.book(currentUserId);
         timeSlotRepository.save(slot);
+
+        try {
+
+            LocalDateTime appointmentTime =
+                    LocalDateTime.of(
+                            appointment.getDate(),
+                            appointment.getStartTime()
+                    );
+
+            ReminderRequestDto reminder =
+                    new ReminderRequestDto();
+
+            reminder.setUserId(
+                    appointment.getPetOwnerId()
+            );
+
+            reminder.setType(
+                    "MEDICAL_REMINDER"
+            );
+
+            reminder.setTitle(
+                    "Appointment Reminder"
+            );
+
+            reminder.setMessage(
+                    "You have an appointment on "
+                            + appointment.getDate()
+                            + " at "
+                            + appointment.getStartTime()
+            );
+
+            reminder.setScheduledAt(
+                    appointmentTime.minusHours(1)
+            );
+
+            restTemplate.postForObject(
+                    "https://pawpal-gateway.onrender.com/notification-service/api/reminders",
+                    reminder,
+                    Void.class
+            );
+
+        } catch (Exception e) {
+            log.error("Failed to create medical reminder", e);
+        }
 
         log.info("Appointment created: id={}, slotId={}, petId={}, specialistId={}",
                 appointment.getId(), slot.getId(), appointment.getPetId(), appointment.getSpecialistId());
