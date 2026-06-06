@@ -147,7 +147,7 @@ public class AdminService {
     // VET
     public VetDto getVetProfile(Long userId) {
 
-        String url = "https://pawpal-gateway.onrender.com/specialist-service/api/veterinarians/user/" + userId;
+        String url = "https://pawpal-gateway.onrender.com/specialist-service/veterinarians/user/" + userId;
         HttpEntity<Void> entity = createEntityWithToken();
 
         try {
@@ -175,7 +175,7 @@ public class AdminService {
     // SERVICE
     public ServiceProviderDto getServiceProfile(Long userId) {
 
-        String url = "https://pawpal-gateway.onrender.com/specialist-service/api/service-providers/user/" + userId;
+        String url = "https://pawpal-gateway.onrender.com/specialist-service/service-providers/user/" + userId;
         HttpEntity<Void> entity = createEntityWithToken();
 
         try {
