@@ -5,6 +5,7 @@ import com.example.pawpalapp.appointmentservice.dto.SpecialistScheduleResponseDt
 import com.example.pawpalapp.appointmentservice.dto.SpecialistScheduleUpdateDto;
 import com.example.pawpalapp.appointmentservice.mapper.SpecialistScheduleMapper;
 import com.example.pawpalapp.appointmentservice.model.SpecialistSchedule;
+import com.example.pawpalapp.appointmentservice.model.enums.SlotStatus;
 import com.example.pawpalapp.appointmentservice.model.enums.SpecialistType;
 import com.example.pawpalapp.appointmentservice.repository.SpecialistScheduleRepository;
 import com.example.pawpalapp.appointmentservice.repository.TimeSlotRepository;
@@ -17,9 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -57,7 +59,7 @@ public class SpecialistScheduleService {
         SpecialistSchedule schedule = scheduleMapper.toEntity(request);
         schedule = scheduleRepository.save(schedule);
 
-        slotGenerationService.regenerateSlotsForSchedule(schedule);
+        slotGenerationService.generateSlotsForNewSchedule(schedule);
 
         log.info("Created schedule for specialist {} on {}", schedule.getSpecialistId(), schedule.getDayOfWeek());
 
@@ -78,11 +80,17 @@ public class SpecialistScheduleService {
 
         validateUpdate(request);
 
+        boolean hasTimeChanged = hasTimeChanged(schedule, request);
+
         scheduleMapper.updateEntity(schedule, request);
         schedule = scheduleRepository.save(schedule);
 
-        // Делегируем перегенерацию слотов в SlotGenerationService
-        slotGenerationService.regenerateSlotsForSchedule(schedule);
+        if (hasTimeChanged) {
+            slotGenerationService.regenerateSlotsForSchedule(schedule);
+            log.info("Regenerated slots after schedule update for specialist {}", schedule.getSpecialistId());
+        } else {
+            log.info("Schedule updated but time unchanged, no slot regeneration needed");
+        }
 
         log.info("Updated schedule {} for specialist {}", id, schedule.getSpecialistId());
 
@@ -101,8 +109,11 @@ public class SpecialistScheduleService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own schedule");
         }
 
+        deleteFutureSlotsForSchedule(schedule);
+
         scheduleRepository.delete(schedule);
-        log.info("Deleted schedule {} for specialist {}", id, schedule.getSpecialistId());
+        log.info("Deleted schedule {} for specialist {} and cleaned up future slots",
+                id, schedule.getSpecialistId());
     }
 
     @Transactional
@@ -110,16 +121,105 @@ public class SpecialistScheduleService {
         Long specialistId = SecurityUtils.getUserId();
         SpecialistType specialistType = resolveSpecialistType(SecurityUtils.getRole());
 
-        if (!scheduleRepository.existsBySpecialistIdAndSpecialistTypeAndDayOfWeek(
-                specialistId, specialistType, dayOfWeek)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    String.format("No schedule found for %s on %s", specialistType, dayOfWeek));
-        }
+        SpecialistSchedule schedule = scheduleRepository
+                .findBySpecialistIdAndSpecialistTypeAndDayOfWeek(specialistId, specialistType, dayOfWeek)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("No schedule found for %s on %s", specialistType, dayOfWeek)));
+
+        deleteFutureSlotsForSchedule(schedule);
 
         scheduleRepository.deleteBySpecialistIdAndSpecialistTypeAndDayOfWeek(specialistId, specialistType, dayOfWeek);
-        log.info("Deleted schedule for specialist {} on {}", specialistId, dayOfWeek);
+        log.info("Deleted schedule for specialist {} on {} and cleaned up future slots", specialistId, dayOfWeek);
     }
 
+    @Transactional
+    public List<SpecialistScheduleResponseDto> createWeeklySchedules(
+            Long specialistId,
+            SpecialistType specialistType,
+            List<SpecialistScheduleCreateDto> requests) {
+
+        Long currentUserId = SecurityUtils.getUserId();
+        String role = SecurityUtils.getRole();
+
+        if (!specialistId.equals(currentUserId) && !"ADMIN".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only create schedules for yourself");
+        }
+
+        List<SpecialistSchedule> savedSchedules = new ArrayList<>();
+
+        for (SpecialistScheduleCreateDto request : requests) {
+            request.setSpecialistId(specialistId);
+            request.setSpecialistType(specialistType);
+
+            validateSchedule(request);
+
+            if (scheduleRepository.existsBySpecialistIdAndSpecialistTypeAndDayOfWeek(
+                    specialistId, specialistType, request.getDayOfWeek())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        String.format("Schedule already exists for %s on %s", specialistType, request.getDayOfWeek()));
+            }
+
+            SpecialistSchedule schedule = scheduleMapper.toEntity(request);
+            savedSchedules.add(scheduleRepository.save(schedule));
+        }
+
+        slotGenerationService.generateSlotsForAllSchedulesOfSpecialist(specialistId);
+
+        log.info("Created {} schedules for specialist {}", savedSchedules.size(), specialistId);
+
+        return savedSchedules.stream()
+                .map(scheduleMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    private void deleteFutureSlotsForSchedule(SpecialistSchedule schedule) {
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusDays(30);
+        LocalDate currentDate = today;
+
+        int totalDeleted = 0;
+
+        while (!currentDate.isAfter(endDate)) {
+            if (currentDate.getDayOfWeek() == schedule.getDayOfWeek()) {
+                int deleted = timeSlotRepository.deleteBySpecialistIdAndDateAndStatus(
+                        schedule.getSpecialistId(), currentDate, SlotStatus.AVAILABLE
+                );
+                totalDeleted += deleted;
+
+                deleted = timeSlotRepository.deleteBySpecialistIdAndDateAndStatus(
+                        schedule.getSpecialistId(), currentDate, SlotStatus.BLOCKED
+                );
+                totalDeleted += deleted;
+
+            }
+            currentDate = currentDate.plusDays(1);
+        }
+
+        if (totalDeleted > 0) {
+            log.info("Deleted {} future slots for specialist {} on {}",
+                    totalDeleted, schedule.getSpecialistId(), schedule.getDayOfWeek());
+        }
+    }
+
+    private boolean hasTimeChanged(SpecialistSchedule existing, SpecialistScheduleUpdateDto request) {
+        if (request.getWorkStart() != null && !request.getWorkStart().equals(existing.getWorkStart())) {
+            return true;
+        }
+        if (request.getWorkEnd() != null && !request.getWorkEnd().equals(existing.getWorkEnd())) {
+            return true;
+        }
+        if (request.getSlotDurationMinutes() != null &&
+                !request.getSlotDurationMinutes().equals(existing.getSlotDurationMinutes())) {
+            return true;
+        }
+        if (request.getBreakStart() != null && !request.getBreakStart().equals(existing.getBreakStart())) {
+            return true;
+        }
+        if (request.getBreakEnd() != null && !request.getBreakEnd().equals(existing.getBreakEnd())) {
+            return true;
+        }
+        return false;
+    }
 
     public List<SpecialistScheduleResponseDto> getMySchedules() {
         Long specialistId = SecurityUtils.getUserId();
@@ -171,7 +271,6 @@ public class SpecialistScheduleService {
                 .map(scheduleMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
-
 
     private void validateSchedule(SpecialistScheduleCreateDto request) {
         if (request.getWorkStart() == null || request.getWorkEnd() == null) {

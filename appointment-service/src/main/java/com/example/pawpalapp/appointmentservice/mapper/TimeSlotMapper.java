@@ -4,6 +4,7 @@ import com.example.pawpalapp.appointmentservice.dto.TimeSlotResponseDto;
 import com.example.pawpalapp.appointmentservice.model.SpecialistSchedule;
 import com.example.pawpalapp.appointmentservice.model.TimeSlot;
 import com.example.pawpalapp.appointmentservice.model.enums.SlotStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 public class TimeSlotMapper {
 
@@ -19,6 +21,7 @@ public class TimeSlotMapper {
         if (timeSlot == null) {
             return null;
         }
+
         return TimeSlotResponseDto.builder()
                 .id(timeSlot.getId())
                 .specialistId(timeSlot.getSpecialistId())
@@ -27,12 +30,11 @@ public class TimeSlotMapper {
                 .startTime(timeSlot.getStartTime())
                 .endTime(timeSlot.getEndTime())
                 .status(timeSlot.getStatus())
-                .isAvailable(timeSlot.isAvailable())
                 .build();
     }
 
     public List<TimeSlotResponseDto> toResponseDtoList(List<TimeSlot> timeSlots) {
-        if (timeSlots == null) {
+        if (timeSlots == null || timeSlots.isEmpty()) {
             return new ArrayList<>();
         }
         return timeSlots.stream()
@@ -44,6 +46,12 @@ public class TimeSlotMapper {
         if (schedule == null || date == null || startTime == null || endTime == null) {
             return null;
         }
+
+        if (startTime.isAfter(endTime)) {
+            log.warn("Invalid slot time: start {} is after end {}", startTime, endTime);
+            return null;
+        }
+
         return TimeSlot.builder()
                 .specialistId(schedule.getSpecialistId())
                 .specialistType(schedule.getSpecialistType())
@@ -58,10 +66,18 @@ public class TimeSlotMapper {
         if (schedule == null || date == null) {
             return new ArrayList<>();
         }
-        if (schedule.getWorkStart() == null || schedule.getWorkEnd() == null) {
+
+        if (date.isBefore(LocalDate.now())) {
             return new ArrayList<>();
         }
+
+        if (schedule.getWorkStart() == null || schedule.getWorkEnd() == null) {
+            log.warn("Schedule {} missing work start or end time", schedule.getId());
+            return new ArrayList<>();
+        }
+
         if (schedule.getSlotDurationMinutes() == null || schedule.getSlotDurationMinutes() <= 0) {
+            log.warn("Schedule {} has invalid slot duration: {}", schedule.getId(), schedule.getSlotDurationMinutes());
             return new ArrayList<>();
         }
 
@@ -71,15 +87,20 @@ public class TimeSlotMapper {
 
         while (current.plusMinutes(duration).compareTo(schedule.getWorkEnd()) <= 0) {
             if (isBreakTime(schedule, current, duration)) {
-                current = schedule.getBreakEnd();
-                continue;
+                if (schedule.getBreakEnd() != null) {
+                    current = schedule.getBreakEnd();
+                    continue;
+                }
             }
+
             TimeSlot slot = toEntity(schedule, date, current, current.plusMinutes(duration));
             if (slot != null) {
                 slots.add(slot);
             }
             current = current.plusMinutes(duration);
         }
+
+        log.debug("Generated {} slots for schedule {} on date {}", slots.size(), schedule.getId(), date);
         return slots;
     }
 
@@ -87,22 +108,32 @@ public class TimeSlotMapper {
         if (schedule.getBreakStart() == null || schedule.getBreakEnd() == null) {
             return false;
         }
-        return current.isBefore(schedule.getBreakEnd()) &&
-                current.plusMinutes(duration).isAfter(schedule.getBreakStart());
+
+        LocalTime slotEnd = current.plusMinutes(duration);
+        return slotEnd.isAfter(schedule.getBreakStart()) && current.isBefore(schedule.getBreakEnd());
     }
 
     public List<TimeSlot> generateSlotsForPeriod(SpecialistSchedule schedule, LocalDate startDate, LocalDate endDate) {
         if (schedule == null || startDate == null || endDate == null) {
             return new ArrayList<>();
         }
+
+        LocalDate actualStart = startDate.isBefore(LocalDate.now()) ? LocalDate.now() : startDate;
+
+        if (actualStart.isAfter(endDate)) {
+            return new ArrayList<>();
+        }
+
         List<TimeSlot> allSlots = new ArrayList<>();
-        LocalDate currentDate = startDate;
+        LocalDate currentDate = actualStart;
+
         while (!currentDate.isAfter(endDate)) {
             if (currentDate.getDayOfWeek() == schedule.getDayOfWeek()) {
                 allSlots.addAll(generateSlotsFromSchedule(schedule, currentDate));
             }
             currentDate = currentDate.plusDays(1);
         }
+
         return allSlots;
     }
 }

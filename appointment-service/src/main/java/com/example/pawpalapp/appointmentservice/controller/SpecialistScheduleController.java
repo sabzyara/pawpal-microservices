@@ -3,6 +3,7 @@ package com.example.pawpalapp.appointmentservice.controller;
 import com.example.pawpalapp.appointmentservice.dto.SpecialistScheduleCreateDto;
 import com.example.pawpalapp.appointmentservice.dto.SpecialistScheduleResponseDto;
 import com.example.pawpalapp.appointmentservice.dto.SpecialistScheduleUpdateDto;
+import com.example.pawpalapp.appointmentservice.model.enums.SpecialistType;
 import com.example.pawpalapp.appointmentservice.service.SpecialistScheduleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,19 +28,29 @@ public class SpecialistScheduleController {
                 .body(scheduleService.createSchedule(request));
     }
 
+    @PostMapping("/weekly")
+    public ResponseEntity<List<SpecialistScheduleResponseDto>> createWeeklySchedules(
+            @RequestParam Long specialistId,
+            @RequestParam SpecialistType specialistType,
+            @Valid @RequestBody List<SpecialistScheduleCreateDto> requests) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(scheduleService.createWeeklySchedules(specialistId, specialistType, requests));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<List<SpecialistScheduleResponseDto>> getMySchedules() {
         return ResponseEntity.ok(scheduleService.getMySchedules());
     }
 
-
     @GetMapping("/{id}")
-    public ResponseEntity<SpecialistScheduleResponseDto> getScheduleById(@PathVariable Long id) {
+    public ResponseEntity<SpecialistScheduleResponseDto> getScheduleById(
+            @PathVariable Long id) {
         return ResponseEntity.ok(scheduleService.getScheduleById(id));
     }
 
     @GetMapping("/day/{dayOfWeek}")
-    public ResponseEntity<SpecialistScheduleResponseDto> getScheduleByDay(@PathVariable DayOfWeek dayOfWeek) {
+    public ResponseEntity<SpecialistScheduleResponseDto> getScheduleByDay(
+            @PathVariable DayOfWeek dayOfWeek) {
         return ResponseEntity.ok(scheduleService.getScheduleByDay(dayOfWeek));
     }
 
@@ -57,13 +68,15 @@ public class SpecialistScheduleController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteSchedule(
+            @PathVariable Long id) {
         scheduleService.deleteSchedule(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/day/{dayOfWeek}")
-    public ResponseEntity<Void> deleteScheduleByDay(@PathVariable DayOfWeek dayOfWeek) {
+    public ResponseEntity<Void> deleteScheduleByDay(
+            @PathVariable DayOfWeek dayOfWeek) {
         scheduleService.deleteScheduleByDay(dayOfWeek);
         return ResponseEntity.noContent().build();
     }
