@@ -39,9 +39,20 @@ public class ServiceProviderController {
         return ResponseEntity.ok(serviceProviderService.getById(id));
     }
 
+//    @GetMapping("/user/{userId}")
+//    public ResponseEntity<ServiceProviderResponseDto> getByUserId(@PathVariable Long userId) {
+//        return ResponseEntity.ok(serviceProviderService.getByUserId(userId));
+//    }
+
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ServiceProviderResponseDto> getByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(serviceProviderService.getByUserId(userId));
+    public ResponseEntity<ServiceProviderResponseDto> getByUserId(
+            @PathVariable Long userId
+    ) {
+        System.out.println("CONTROLLER USER ID = " + userId);
+
+        return ResponseEntity.ok(
+                serviceProviderService.getByUserId(userId)
+        );
     }
 
     @PutMapping("/me")
