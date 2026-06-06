@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -77,7 +76,7 @@ public class AppointmentService {
         Appointment appointment = appointmentMapper.toEntity(request, slot);
         appointment = appointmentRepository.save(appointment);
 
-        slot.book();
+        slot.book(currentUserId);
         timeSlotRepository.save(slot);
 
         log.info("Appointment created: id={}, slotId={}, petId={}, specialistId={}",
@@ -107,13 +106,14 @@ public class AppointmentService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Time slot not found"));
 
         if (slot.getStatus() != SlotStatus.BOOKED) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Time slot is no longer available");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Time slot is no longer booked");
         }
 
         appointment.setStatus(AppointmentStatus.CONFIRMED);
+        appointment.setUpdatedAt(LocalDateTime.now());
         appointment = appointmentRepository.save(appointment);
 
-        log.info("Confirmed appointment {} (slot {} already booked)", id, slot.getId());
+        log.info("Confirmed appointment {} by specialist {}", id, currentUserId);
 
         return appointmentMapper.toResponseDto(appointment);
     }
@@ -132,7 +132,6 @@ public class AppointmentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
-        // Владелец видит только рекомендации, специалист видит всё
         boolean showOnlyRecommendations = isOwner && !isSpecialist;
 
         return appointmentMapper.toResponseDto(appointment, showOnlyRecommendations);
@@ -195,7 +194,6 @@ public class AppointmentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
-        // Проверка возможности изменения
         if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot modify completed appointment");
         }
@@ -204,7 +202,6 @@ public class AppointmentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot modify cancelled appointment");
         }
 
-        // Обновление полей с проверкой прав
         if (request.getOwnerNotes() != null && (isOwner || isAdmin)) {
             appointment.setOwnerNotes(request.getOwnerNotes());
         }
@@ -315,7 +312,6 @@ public class AppointmentService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "New time slot already booked");
         }
 
-        // Отмена старой записи
         if (isOwner) {
             oldAppointment.setStatus(AppointmentStatus.CANCELLED_BY_USER);
         } else {
@@ -326,19 +322,16 @@ public class AppointmentService {
         oldAppointment.setUpdatedAt(LocalDateTime.now());
         appointmentRepository.save(oldAppointment);
 
-        // Освобождение старого слота
         TimeSlot oldSlot = timeSlotRepository.findById(oldAppointment.getTimeSlotId()).orElse(null);
         if (oldSlot != null && oldSlot.getStatus() == SlotStatus.BOOKED) {
             oldSlot.release();
             timeSlotRepository.save(oldSlot);
         }
 
-        // Создание новой записи
         Appointment newAppointment = appointmentMapper.prepareReschedule(oldAppointment, request, newSlot);
         newAppointment = appointmentRepository.save(newAppointment);
 
-        // Бронирование нового слота
-        newSlot.book();
+        newSlot.book(currentUserId);
         timeSlotRepository.save(newSlot);
 
         log.info("Rescheduled appointment {} to new slot {} by user {}",
@@ -388,6 +381,10 @@ public class AppointmentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
+        if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Appointment is not completed yet");
+        }
+
         String recommendations = appointmentMapper.extractRecommendations(appointment.getSpecialistNotes());
 
         if (recommendations == null) {
@@ -427,55 +424,47 @@ public class AppointmentService {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
 
-        // Создаем список статусов
         List<AppointmentStatus> statuses = Arrays.asList(AppointmentStatus.CREATED, AppointmentStatus.CONFIRMED);
-
         List<Appointment> appointments;
 
         if ("owner".equalsIgnoreCase(userType)) {
             if (!"OWNER".equals(role)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
             }
-            // Передаем статусы
             appointments = appointmentRepository.findUpcomingByPetOwnerId(userId, today, now, statuses);
-
-            int start = (int) pageable.getOffset();
-            int end = Math.min((start + pageable.getPageSize()), appointments.size());
-
-            if (start >= appointments.size()) {
-                return new PageImpl<>(List.of(), pageable, appointments.size());
-            }
-
-            List<AppointmentResponseDto> pagedList = appointments.subList(start, end)
-                    .stream()
-                    .map(app -> appointmentMapper.toResponseDto(app, true))
-                    .collect(Collectors.toList());
-
-            return new PageImpl<>(pagedList, pageable, appointments.size());
+            return createPageResponse(appointments, pageable, true);
 
         } else if ("specialist".equalsIgnoreCase(userType)) {
             if (!isSpecialistRole(role)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
             }
-            // Передаем статусы
             appointments = appointmentRepository.findUpcomingBySpecialistId(userId, today, now, statuses);
-
-            int start = (int) pageable.getOffset();
-            int end = Math.min((start + pageable.getPageSize()), appointments.size());
-
-            if (start >= appointments.size()) {
-                return new PageImpl<>(List.of(), pageable, appointments.size());
-            }
-
-            List<AppointmentResponseDto> pagedList = appointments.subList(start, end)
-                    .stream()
-                    .map(appointmentMapper::toResponseDto)
-                    .collect(Collectors.toList());
-
-            return new PageImpl<>(pagedList, pageable, appointments.size());
+            return createPageResponse(appointments, pageable, false);
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid userType. Use 'owner' or 'specialist'");
         }
+    }
+
+    private Page<AppointmentResponseDto> createPageResponse(List<Appointment> appointments, Pageable pageable, boolean showOnlyRecommendations) {
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), appointments.size());
+
+        if (start >= appointments.size()) {
+            return new PageImpl<>(List.of(), pageable, appointments.size());
+        }
+
+        List<AppointmentResponseDto> pagedList = appointments.subList(start, end)
+                .stream()
+                .map(app -> {
+                    if (showOnlyRecommendations) {
+                        return appointmentMapper.toResponseDto(app, true);
+                    } else {
+                        return appointmentMapper.toResponseDto(app);
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(pagedList, pageable, appointments.size());
     }
 
     @Transactional
@@ -516,7 +505,7 @@ public class AppointmentService {
     }
 
     private boolean isSpecialistRole(String role) {
-        return "VET".equals(role) || "SERVICE".equals(role) ;
+        return "VET".equals(role) || "SERVICE".equals(role);
     }
 
     private void validateStatusTransition(AppointmentStatus currentStatus, AppointmentStatus newStatus) {
@@ -539,13 +528,11 @@ public class AppointmentService {
                 }
                 break;
             case COMPLETED:
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Cannot change status from COMPLETED");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot change status from COMPLETED");
             case CANCELLED_BY_USER:
             case CANCELLED_BY_SPECIALIST:
             case NO_SHOW:
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Cannot change status from " + currentStatus);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot change status from " + currentStatus);
             default:
                 break;
         }

@@ -42,6 +42,36 @@ public class SlotGenerationService {
 
     private final ConcurrentMap<String, Boolean> generationLocks = new ConcurrentHashMap<>();
 
+    @Transactional
+    public void generateSlotsForNewSchedule(SpecialistSchedule schedule) {
+        log.info("Generating slots for new schedule: specialist={}, dayOfWeek={}, workStart={}, workEnd={}",
+                schedule.getSpecialistId(), schedule.getDayOfWeek(),
+                schedule.getWorkStart(), schedule.getWorkEnd());
+
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusDays(DAYS_TO_GENERATE);
+
+        int generatedCount = generateMissingSlotsForSchedule(schedule, today, endDate);
+
+        log.info("Generated {} slots for specialist {} on {} (next 30 days)",
+                generatedCount, schedule.getSpecialistId(), schedule.getDayOfWeek());
+    }
+
+    @Transactional
+    public void generateSlotsForAllSchedulesOfSpecialist(Long specialistId) {
+        log.info("Generating slots for all schedules of specialist: {}", specialistId);
+
+        List<SpecialistSchedule> schedules = scheduleRepository.findBySpecialistId(specialistId);
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusDays(DAYS_TO_GENERATE);
+
+        int totalGenerated = 0;
+        for (SpecialistSchedule schedule : schedules) {
+            totalGenerated += generateMissingSlotsForSchedule(schedule, today, endDate);
+        }
+
+        log.info("Generated total {} slots for specialist {}", totalGenerated, specialistId);
+    }
 
     @Scheduled(cron = "0 0 2 * * ?")
     @Transactional
@@ -74,32 +104,62 @@ public class SlotGenerationService {
 
         int deletedCount = 0;
         LocalDate currentDate = today;
+        List<LocalDate> datesToDelete = new ArrayList<>();
 
         while (!currentDate.isAfter(endDate)) {
             if (currentDate.getDayOfWeek() == schedule.getDayOfWeek()) {
-                int deleted = timeSlotRepository.deleteBySpecialistIdAndDateAndStatus(
-                        schedule.getSpecialistId(), currentDate, SlotStatus.AVAILABLE
+                boolean hasBookedSlots = timeSlotRepository.existsBySpecialistIdAndDateAndStatus(
+                        schedule.getSpecialistId(), currentDate, SlotStatus.BOOKED
                 );
-                deletedCount += deleted;
+
+                if (!hasBookedSlots) {
+                    int deleted = timeSlotRepository.deleteBySpecialistIdAndDateAndStatus(
+                            schedule.getSpecialistId(), currentDate, SlotStatus.AVAILABLE
+                    );
+                    deletedCount += deleted;
+                    datesToDelete.add(currentDate);
+                } else {
+                    log.warn("Skipping regeneration for date {} because has BOOKED slots", currentDate);
+                }
             }
             currentDate = currentDate.plusDays(1);
         }
 
-        log.info("Deleted {} old available slots", deletedCount);
+        log.info("Deleted {} old available slots on {} dates", deletedCount, datesToDelete.size());
 
-        // Генерируем новые слоты только для дат, где нет BOOKED слотов
-        int generatedCount = generateMissingSlotsForSchedule(schedule, today, endDate);
+        int generatedCount = 0;
+        for (LocalDate date : datesToDelete) {
+            List<TimeSlot> newSlots = timeSlotMapper.generateSlotsFromSchedule(schedule, date);
+            if (!newSlots.isEmpty()) {
+                timeSlotRepository.saveAll(newSlots);
+                generatedCount += newSlots.size();
+            }
+        }
 
         log.info("Regeneration completed: {} new slots generated", generatedCount);
     }
 
     @Transactional
     public void regenerateSlotsForDate(Long specialistId, LocalDate date) {
+        if (date.isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cannot regenerate slots for past dates");
+        }
+
         SpecialistSchedule schedule = scheduleRepository
                 .findBySpecialistIdAndDayOfWeek(specialistId, date.getDayOfWeek())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         String.format("No schedule found for specialist %d on %s",
                                 specialistId, date.getDayOfWeek())));
+
+        boolean hasBookedSlots = timeSlotRepository.existsBySpecialistIdAndDateAndStatus(
+                specialistId, date, SlotStatus.BOOKED
+        );
+
+        if (hasBookedSlots) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Cannot regenerate slots on date with existing bookings");
+        }
 
         timeSlotRepository.deleteBySpecialistIdAndDateAndStatus(specialistId, date, SlotStatus.AVAILABLE);
 
@@ -114,6 +174,10 @@ public class SlotGenerationService {
 
     public Page<TimeSlotResponseDto> getAvailableSlots(Long specialistId, SpecialistType specialistType,
                                                        LocalDate date, Pageable pageable) {
+        if (date == null) {
+            return Page.empty(pageable);
+        }
+
         if (date.isBefore(LocalDate.now())) {
             return Page.empty(pageable);
         }
@@ -140,6 +204,10 @@ public class SlotGenerationService {
     }
 
     private List<TimeSlot> getOrGenerateSlots(Long specialistId, LocalDate date) {
+        if (date.isBefore(LocalDate.now())) {
+            return new ArrayList<>();
+        }
+
         List<TimeSlot> existingSlots = timeSlotRepository.findBySpecialistIdAndDate(specialistId, date);
 
         if (!existingSlots.isEmpty()) {
@@ -185,7 +253,6 @@ public class SlotGenerationService {
         for (int retries = 0; retries < 20; retries++) {
             try {
                 Thread.sleep(100);
-                // Исправлено: используем правильное имя метода
                 List<TimeSlot> slots = timeSlotRepository.findBySpecialistIdAndDate(specialistId, date);
                 if (!slots.isEmpty()) {
                     return slots;
@@ -201,16 +268,18 @@ public class SlotGenerationService {
     private int generateMissingSlotsForSchedule(SpecialistSchedule schedule,
                                                 LocalDate startDate,
                                                 LocalDate endDate) {
+        LocalDate actualStartDate = startDate.isBefore(LocalDate.now()) ? LocalDate.now() : startDate;
+
         List<LocalDate> datesToGenerate = new ArrayList<>();
-        LocalDate currentDate = startDate;
+        LocalDate currentDate = actualStartDate;
 
         while (!currentDate.isAfter(endDate)) {
             if (currentDate.getDayOfWeek() == schedule.getDayOfWeek()) {
-                boolean hasSlots = timeSlotRepository.existsBySpecialistIdAndDate(
+                boolean hasAnySlots = timeSlotRepository.existsBySpecialistIdAndDate(
                         schedule.getSpecialistId(), currentDate
                 );
 
-                if (!hasSlots) {
+                if (!hasAnySlots) {
                     datesToGenerate.add(currentDate);
                 }
             }
@@ -244,6 +313,16 @@ public class SlotGenerationService {
 
         if (deleted > 0) {
             log.info("Cleaned up {} old booked slots before {}", deleted, thresholdDate);
+        }
+
+        int deletedAvailable = timeSlotRepository.deleteByDateBeforeAndStatus(thresholdDate, SlotStatus.AVAILABLE);
+        if (deletedAvailable > 0) {
+            log.info("Cleaned up {} old available slots before {}", deletedAvailable, thresholdDate);
+        }
+
+        int deletedBlocked = timeSlotRepository.deleteByDateBeforeAndStatus(thresholdDate, SlotStatus.BLOCKED);
+        if (deletedBlocked > 0) {
+            log.info("Cleaned up {} old blocked slots before {}", deletedBlocked, thresholdDate);
         }
     }
 

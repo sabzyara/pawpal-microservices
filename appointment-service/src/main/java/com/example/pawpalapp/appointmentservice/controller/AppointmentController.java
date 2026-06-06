@@ -34,41 +34,46 @@ public class AppointmentController {
     @GetMapping("/me")
     public ResponseEntity<Page<AppointmentResponseDto>> getMyAppointments(
             @PageableDefault(size = 20, sort = "date", direction = Sort.Direction.DESC) Pageable pageable,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false)
+            String status) {
         return ResponseEntity.ok(appointmentService.getMyAppointments(pageable, status));
     }
 
     @GetMapping("/specialist/me")
     public ResponseEntity<Page<AppointmentResponseDto>> getMySpecialistAppointments(
             @PageableDefault(size = 20, sort = "date", direction = Sort.Direction.DESC) Pageable pageable,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false)
+            String status) {
         return ResponseEntity.ok(appointmentService.getMySpecialistAppointments(pageable, status));
     }
 
     @GetMapping("/upcoming")
     public ResponseEntity<Page<AppointmentResponseDto>> getUpcomingAppointments(
-            @RequestParam String userType,
+            @RequestParam
+            String userType,
             @PageableDefault(size = 20, sort = "date", direction = Sort.Direction.ASC) Pageable pageable) {
         return ResponseEntity.ok(appointmentService.getUpcomingAppointments(userType, pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AppointmentResponseDto> getAppointmentById(@PathVariable Long id) {
+    public ResponseEntity<AppointmentResponseDto> getAppointmentById(
+            @PathVariable
+            Long id) {
         return ResponseEntity.ok(appointmentService.getAppointmentById(id));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<AppointmentResponseDto> updateAppointment(
             @PathVariable Long id,
-            @RequestBody AppointmentUpdateDto request) {
+            @Valid @RequestBody AppointmentUpdateDto request) {
         return ResponseEntity.ok(appointmentService.updateAppointment(id, request));
     }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelAppointment(
             @PathVariable Long id,
-            @RequestParam(required = false, defaultValue = "Cancelled by user") String reason) {
+            @RequestParam(required = false, defaultValue = "Cancelled by user")
+            String reason) {
         AppointmentCancelDto cancelDto = new AppointmentCancelDto();
         cancelDto.setUserId(SecurityUtils.getUserId());
         cancelDto.setCancellationReason(reason);
@@ -76,28 +81,31 @@ public class AppointmentController {
         return ResponseEntity.noContent().build();
     }
 
-
     @PostMapping("/{id}/cancel")
     public ResponseEntity<Void> cancelAppointmentWithBody(
             @PathVariable Long id,
             @Valid @RequestBody AppointmentCancelDto cancelDto) {
+        cancelDto.setUserId(SecurityUtils.getUserId());
         appointmentService.cancelAppointment(id, cancelDto);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/confirm")
-    public ResponseEntity<AppointmentResponseDto> confirmAppointment(@PathVariable Long id) {
+    public ResponseEntity<AppointmentResponseDto> confirmAppointment(
+            @PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.confirmAppointment(id));
     }
 
     @PatchMapping("/{id}/complete")
-    public ResponseEntity<Void> completeAppointment(@PathVariable Long id) {
+    public ResponseEntity<Void> completeAppointment(
+            @PathVariable Long id) {
         appointmentService.completeAppointment(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/no-show")
-    public ResponseEntity<AppointmentResponseDto> markAsNoShow(@PathVariable Long id) {
+    public ResponseEntity<AppointmentResponseDto> markAsNoShow(
+            @PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.markAsNoShow(id));
     }
 
@@ -109,14 +117,14 @@ public class AppointmentController {
     }
 
     @GetMapping("/{id}/recommendations")
-    public ResponseEntity<String> getRecommendations(@PathVariable Long id) {
+    public ResponseEntity<String> getRecommendations(
+            @PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.getRecommendationsForOwner(id));
     }
 
-
     @PostMapping("/reschedule")
-    public ResponseEntity<AppointmentResponseDto> rescheduleAppointment(@Valid @RequestBody AppointmentRescheduleDto rescheduleDto) {
+    public ResponseEntity<AppointmentResponseDto> rescheduleAppointment(
+            @Valid @RequestBody AppointmentRescheduleDto rescheduleDto) {
         return ResponseEntity.ok(appointmentService.rescheduleAppointment(rescheduleDto));
     }
-
 }

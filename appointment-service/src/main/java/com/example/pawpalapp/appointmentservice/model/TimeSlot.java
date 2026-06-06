@@ -67,7 +67,6 @@ public class TimeSlot {
 
     private String blockedReason;
 
-
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -85,15 +84,20 @@ public class TimeSlot {
         }
     }
 
-    public void book() {
+    public void book(Long userId) {
         if (!isAvailable()) {
             throw new IllegalStateException("Slot is not available");
         }
         this.status = SlotStatus.BOOKED;
+        this.userId = userId;
     }
 
     public void release() {
+        if (this.status != SlotStatus.BOOKED) {
+            throw new IllegalStateException("Only booked slots can be released");
+        }
         this.status = SlotStatus.AVAILABLE;
+        this.userId = null;
     }
 }
 
