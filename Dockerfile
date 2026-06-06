@@ -4,6 +4,6 @@ WORKDIR /app
 COPY . .
 
 RUN chmod +x gradlew
-RUN ./gradlew :specialist-service:build -x test
+RUN ./gradlew :user-service:build -x test
 
-CMD ["java", "-jar", "specialist-service/build/libs/specialist-service-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "user-service/build/libs/user-service-0.0.1-SNAPSHOT.jar"]
