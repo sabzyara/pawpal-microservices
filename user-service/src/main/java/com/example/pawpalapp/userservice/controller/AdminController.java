@@ -8,6 +8,8 @@ import com.example.pawpalapp.userservice.model.enums.UserStatus;
 import com.example.pawpalapp.userservice.service.AdminService;
 import com.example.pawpalapp.userservice.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +26,19 @@ public class AdminController {
         this.userService = userService;
     }
 
+    @GetMapping("/profile")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public UserResponseDto getMyProfile() {
+
+        Jwt jwt = (Jwt) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Long userId = jwt.getClaim("userId");
+
+        return adminService.getAdminProfile(userId);
+    }
 
 //    @GetMapping("/users")
 //    @PreAuthorize("hasAuthority('ADMIN')")

@@ -100,6 +100,21 @@ public class AdminService {
         };
     }
 
+    // ADMIN
+    public UserResponseDto getAdminProfile(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return new UserResponseDto(
+                user.getId(),
+                user.getEmail(),
+                user.getRole(),
+                user.getStatus(),
+                user.getCreatedAt()
+        );
+    }
+
     // OWNER
     public OwnerFullDto getOwnerProfile(Long userId) {
 
